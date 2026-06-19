@@ -8,6 +8,7 @@ import {
   Layers,
   Code,
   Network,
+  GitBranch,
   ChevronsUpDown,
 } from "lucide-react"
 import {
@@ -23,16 +24,17 @@ import {
 const createItems = [
   { id: "tools", title: "Toolsets", icon: SlidersHorizontal },
   { id: "ingest", title: "Your APIs", icon: FolderOpen },
-  { id: "custom-tools", title: "Custom Tools", icon: Wrench, disabled: true },
-  { id: "prompts", title: "Prompts", icon: FileCode, disabled: true },
-  { id: "environments", title: "Environments", icon: Globe, disabled: true },
+  { id: "custom-tools", title: "Custom Tools", icon: Wrench },
+  { id: "prompts", title: "Prompts", icon: FileCode },
+  { id: "environments", title: "Environments", icon: Globe },
 ]
 
 const consumeItems = [
+  { id: "workflows", title: "Workflow Proxy", icon: GitBranch },
   { id: "playground", title: "Playground", icon: Bot },
   { id: "dag", title: "DAG Viewer", icon: Network },
-  { id: "mcp", title: "MCP", icon: Layers, disabled: true },
-  { id: "sdks", title: "SDKs", icon: Code, disabled: true },
+  { id: "mcp", title: "MCP", icon: Layers },
+  { id: "sdks", title: "SDKs", icon: Code },
 ]
 
 export function AppSidebar({ activePage, onPageChange }) {

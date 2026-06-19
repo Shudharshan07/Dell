@@ -1,0 +1,10 @@
+# Run the whole stack in one command:  docker compose up --build
+# (Create compiler/.env first — copy compiler/.env.example and add your keys.)
+services:
+  mcp-workflow-proxy:
+    build: .
+    ports:
+      - "8000:8000"   # REST API + UI
+      - "8002:8002"   # MCP server (SSE)
+    env_file:
+      - compiler/.env

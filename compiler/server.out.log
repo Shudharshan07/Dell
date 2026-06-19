@@ -1,0 +1,4 @@
+INFO:     127.0.0.1:57725 - "GET /api/v1/workflows/route?message=get+the+wis+ability+score+and+list+skills HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57727 - "GET /api/v1/mcp/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57730 - "GET /api/v1/sdk?source_id=dnd5eapi.co_0.1_openapi&lang=python HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57732 - "GET /api/v1/workflows/metrics-all HTTP/1.1" 200 OK

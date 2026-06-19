@@ -39,3 +39,6 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.7.0
 uvicorn==0.49.0
+
+# MCP server — workflow-level tools over SSE (port 8002). Required by app/mcp_server.py.
+fastmcp>=2.3.0

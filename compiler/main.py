@@ -18,6 +18,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from app.ingest import router as ingest_router
 from app.proxy import router as proxy_router
+from app.agent import router as agent_router
+from app.resources import router as resources_router
+from app.workflows import router as workflows_router
 
 app = FastAPI(title="Gram Local Execution Engine")
 
@@ -32,6 +35,9 @@ app.add_middleware(
 
 app.include_router(ingest_router)
 app.include_router(proxy_router)
+app.include_router(agent_router)
+app.include_router(resources_router)
+app.include_router(workflows_router)
 
 
 BASE_SPEC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "test_specs", "V3"))
@@ -105,7 +111,11 @@ def list_specs():
 @app.get("/api/dag")
 def get_dag(filename: str = Query(..., description="Target spec file in test_specs/V3")):
     spec_path = os.path.abspath(os.path.join(BASE_SPEC_DIR, filename))
-    
+
+    # Containment: reject any filename that escapes BASE_SPEC_DIR (path traversal).
+    if os.path.commonpath([spec_path, BASE_SPEC_DIR]) != BASE_SPEC_DIR:
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+
     if not os.path.exists(spec_path):
         raise HTTPException(status_code=404, detail=f"Spec file '{filename}' not found.")
         

@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: Redfish Mock Service
+  description: >
+    Compact but representative DMTF Redfish v1 service model for demoing the
+    MCP Workflow Proxy's Redfish domain profile. Covers Systems, Chassis,
+    Managers, UpdateService.SimpleUpdate, FirmwareInventory, ComputerSystem.Reset,
+    and TaskService. Not a full Redfish implementation.
+  version: "1.0"
+servers:
+  - url: https://redfish.local
+paths:
+  /redfish/v1:
+    get:
+      operationId: getServiceRoot
+      summary: Get the Redfish service root
+      responses:
+        "200": { description: OK }
+
+  /redfish/v1/Systems:
+    get:
+      operationId: getSystemsCollection
+      summary: List computer systems
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Systems/{ComputerSystemId}:
+    get:
+      operationId: getComputerSystem
+      summary: Get a computer system (health, power state)
+      parameters:
+        - { name: ComputerSystemId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Systems/{ComputerSystemId}/Actions/ComputerSystem.Reset:
+    post:
+      operationId: resetComputerSystem
+      summary: Reset / power-control a computer system
+      parameters:
+        - { name: ComputerSystemId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ResetType:
+                  type: string
+                  enum: [On, ForceOff, GracefulShutdown, ForceRestart, GracefulRestart, PowerCycle]
+      responses:
+        "202": { description: Accepted - task created }
+  /redfish/v1/Systems/{ComputerSystemId}/Processors:
+    get:
+      operationId: getProcessors
+      summary: List processors (inventory)
+      parameters:
+        - { name: ComputerSystemId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Systems/{ComputerSystemId}/Memory:
+    get:
+      operationId: getMemory
+      summary: List memory modules (inventory)
+      parameters:
+        - { name: ComputerSystemId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Systems/{ComputerSystemId}/Storage:
+    get:
+      operationId: getStorage
+      summary: List storage subsystems (inventory)
+      parameters:
+        - { name: ComputerSystemId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Systems/{ComputerSystemId}/EthernetInterfaces:
+    get:
+      operationId: getEthernetInterfaces
+      summary: List ethernet interfaces (inventory)
+      parameters:
+        - { name: ComputerSystemId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /redfish/v1/Chassis:
+    get:
+      operationId: getChassisCollection
+      summary: List chassis
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Chassis/{ChassisId}:
+    get:
+      operationId: getChassis
+      summary: Get a chassis
+      parameters:
+        - { name: ChassisId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Chassis/{ChassisId}/Thermal:
+    get:
+      operationId: getThermal
+      summary: Get chassis thermal sensors (telemetry/health)
+      parameters:
+        - { name: ChassisId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Chassis/{ChassisId}/Power:
+    get:
+      operationId: getPower
+      summary: Get chassis power readings (telemetry/health)
+      parameters:
+        - { name: ChassisId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /redfish/v1/Managers:
+    get:
+      operationId: getManagersCollection
+      summary: List managers (BMC/iDRAC)
+      responses:
+        "200": { description: OK }
+  /redfish/v1/Managers/{ManagerId}:
+    get:
+      operationId: getManager
+      summary: Get a manager (BMC/iDRAC) status
+      parameters:
+        - { name: ManagerId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /redfish/v1/UpdateService:
+    get:
+      operationId: getUpdateService
+      summary: Get the update service
+      responses:
+        "200": { description: OK }
+  /redfish/v1/UpdateService/Actions/UpdateService.SimpleUpdate:
+    post:
+      operationId: simpleUpdate
+      summary: Push a firmware image (SimpleUpdate)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ImageURI: { type: string }
+                Targets: { type: array, items: { type: string } }
+      responses:
+        "202": { description: Accepted - firmware task created }
+  /redfish/v1/UpdateService/FirmwareInventory:
+    get:
+      operationId: getFirmwareInventory
+      summary: List installed firmware versions
+      responses:
+        "200": { description: OK }
+  /redfish/v1/UpdateService/FirmwareInventory/{FirmwareId}:
+    get:
+      operationId: getFirmwareInventoryItem
+      summary: Get a firmware inventory item
+      parameters:
+        - { name: FirmwareId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /redfish/v1/TaskService:
+    get:
+      operationId: getTaskService
+      summary: Get the task service
+      responses:
+        "200": { description: OK }
+  /redfish/v1/TaskService/Tasks:
+    get:
+      operationId: getTasksCollection
+      summary: List tasks (async jobs)
+      responses:
+        "200": { description: OK }
+  /redfish/v1/TaskService/Tasks/{TaskId}:
+    get:
+      operationId: getTask
+      summary: Get a task's state (poll firmware/reset job)
+      parameters:
+        - { name: TaskId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+
+  /redfish/v1/TelemetryService:
+    get:
+      operationId: getTelemetryService
+      summary: Get the telemetry service
+      responses:
+        "200": { description: OK }
+  /redfish/v1/TelemetryService/MetricReports:
+    get:
+      operationId: getMetricReports
+      summary: List metric reports (telemetry)
+      responses:
+        "200": { description: OK }

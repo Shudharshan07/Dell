@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { ToolsetExtras } from "@/components/toolset-extras"
 
 export function ToolsetManager({
   tools,
@@ -147,7 +148,8 @@ export function ToolsetManager({
           path: t.path ?? "/",
           description: t.description ?? t.summary ?? "Generated tool route",
           parameters: normalizeParams(t.parameters),
-          selected: false // start with none selected
+          selected: false, // start with none selected
+          source_id: newSource
         }))
 
         const payload = {
@@ -229,7 +231,8 @@ export function ToolsetManager({
           path: t.path ?? "/",
           description: t.description ?? t.summary ?? "Generated tool route",
           parameters: normalizeParams(t.parameters),
-          selected: existingSelectedIds.has(t.operation_id ?? t.id ?? t.name)
+          selected: existingSelectedIds.has(t.operation_id ?? t.id ?? t.name),
+          source_id: sourceId
         }))
 
         // Update selected set
@@ -533,7 +536,7 @@ export function ToolsetManager({
 
             {/* Navigation tabs */}
             <div className="flex gap-2.5 border-b border-[#D0CECA] pb-3">
-              {["Tools", "Prompts", "MCP"].map((tab) => (
+              {["Tools", "Custom Tools", "Prompts", "MCP", "SDK", "Environments"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -576,10 +579,9 @@ export function ToolsetManager({
                         </div>
 
                         {tool.description && (
-                          <div 
-                            className="border-l-2 border-[#D1CFCA] pl-3 text-xs text-[#55534E] leading-relaxed italic bg-[#FAFAFA] py-2 pr-2 rounded-r"
-                            dangerouslySetInnerHTML={{ __html: tool.description }}
-                          />
+                          <div className="border-l-2 border-[#D1CFCA] pl-3 text-xs text-[#55534E] leading-relaxed italic bg-[#FAFAFA] py-2 pr-2 rounded-r whitespace-pre-wrap">
+                            {tool.description}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -588,62 +590,13 @@ export function ToolsetManager({
               </div>
             )}
 
-            {/* TAB CONTENT: Prompts */}
-            {activeTab === "Prompts" && (
-              <div className="space-y-4">
-                <div className="bg-white border border-[#D1CFCA] rounded-xl p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="text-sm font-bold text-[#111827]">Generate API Client</h4>
-                      <p className="text-xs text-[#787670] mt-1">Prompt template to generate SDK libraries.</p>
-                    </div>
-                    <span className="workspace-pill">System</span>
-                  </div>
-                  <div className="bg-[#FAFAFA] p-3 rounded-lg border border-[#D0CECA] font-mono text-xs text-[#55534E] leading-relaxed whitespace-pre-wrap">
-                    {"Write a production-ready SDK wrapper client for the Stripe Charges API in Go. Implement robust error handling, retries, and clean logging."}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB CONTENT: MCP */}
-            {activeTab === "MCP" && (
-              <div className="space-y-4">
-                <div className="bg-white border border-[#D1CFCA] rounded-xl p-6 space-y-4">
-                  <div>
-                    <h4 className="text-sm font-bold text-[#111827]">Model Context Protocol Integration</h4>
-                    <p className="text-xs text-[#787670] mt-1">Configure your local workspace LLM to query this toolset via SSE.</p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-[#787670]">SSE Transport Host</span>
-                      <div className="bg-[#FAFAFA] px-3 py-2 rounded-lg border border-[#D0CECA] flex items-center justify-between font-mono text-xs text-[#55534E]">
-                        <span>http://localhost:8002/sse</span>
-                        <button 
-                          onClick={() => handleCopyName("http://localhost:8002/sse")}
-                          className="text-[#787670] hover:text-[#111827]"
-                        >
-                          <Copy className="size-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] uppercase font-bold text-[#787670]">Fastmcp run CLI</span>
-                      <div className="bg-[#FAFAFA] px-3 py-2 rounded-lg border border-[#D0CECA] flex items-center justify-between font-mono text-xs text-[#55534E]">
-                        <span>fastmcp run app/mcp_server.py --port 8002</span>
-                        <button 
-                          onClick={() => handleCopyName("fastmcp run app/mcp_server.py --port 8002")}
-                          className="text-[#787670] hover:text-[#111827]"
-                        >
-                          <Copy className="size-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* TAB CONTENT: Custom Tools / Prompts / MCP / SDK / Environments */}
+            {activeTab !== "Tools" && (
+              <ToolsetExtras
+                toolsetId={selectedToolset.toolset_id}
+                activeTab={activeTab}
+                tools={selectedToolset.tools.filter((t) => t.selected)}
+              />
             )}
           </div>
         )}
@@ -740,10 +693,9 @@ export function ToolsetManager({
                       </div>
 
                       {tool.description && (
-                        <div 
-                          className="flex-1 text-xs text-[#55534E] leading-relaxed truncate md:line-clamp-2 md:whitespace-normal italic pl-4 border-l border-[#D0CECA] hidden md:block"
-                          dangerouslySetInnerHTML={{ __html: tool.description }}
-                        />
+                        <div className="flex-1 text-xs text-[#55534E] leading-relaxed truncate md:line-clamp-2 md:whitespace-normal italic pl-4 border-l border-[#D0CECA] hidden md:block">
+                          {tool.description}
+                        </div>
                       )}
                     </div>
                   )

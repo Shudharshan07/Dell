@@ -9,6 +9,35 @@ from app.storage import load_storage, save_storage
 router = APIRouter(prefix="/api/v1")
 
 
+def _resolve_ref(spec: dict, ref: str):
+    """Resolve a local JSON pointer like '#/components/parameters/foo'."""
+    if not isinstance(ref, str) or not ref.startswith("#/"):
+        return {}
+    node = spec
+    for part in ref[2:].split("/"):
+        part = part.replace("~1", "/").replace("~0", "~")
+        if isinstance(node, dict) and part in node:
+            node = node[part]
+        else:
+            return {}
+    return node if isinstance(node, dict) else {}
+
+
+def _resolve_params(spec: dict, raw_params, depth: int = 0):
+    """Resolve a list of parameter objects, following $ref one level."""
+    out = []
+    if not isinstance(raw_params, list) or depth > 3:
+        return out
+    for p in raw_params:
+        if isinstance(p, dict) and "$ref" in p:
+            resolved = _resolve_ref(spec, p["$ref"])
+            if resolved:
+                out.append(resolved)
+        elif isinstance(p, dict):
+            out.append(p)
+    return out
+
+
 @router.post("/ingest")
 async def ingest_openapi(file: UploadFile = File(...)):
     """Parses an OpenAPI spec file, flattens endpoints, and persists to local storage."""
@@ -27,9 +56,16 @@ async def ingest_openapi(file: UploadFile = File(...)):
     servers = spec_data.get("servers", [{}])
     base_url = servers[0].get("url", "") if servers else ""
 
+    # Swagger 2.0 fallback: derive base_url from host + basePath + schemes.
+    if not base_url and spec_data.get("host"):
+        scheme = (spec_data.get("schemes") or ["https"])[0]
+        base_url = f"{scheme}://{spec_data['host']}{spec_data.get('basePath', '')}"
+
     for path, methods in paths.items():
         if not isinstance(methods, dict):
             continue
+        # Path-item-level parameters are shared across all methods on this path.
+        shared_params = _resolve_params(spec_data, methods.get("parameters", []))
         for method, details in methods.items():
             if method.lower() not in ["get", "post", "put", "delete", "patch"]:
                 continue
@@ -41,14 +77,28 @@ async def ingest_openapi(file: UploadFile = File(...)):
                 .replace("-", "_")
             )
 
+            # Merge shared + operation params, resolving any $ref pointers.
+            op_params = _resolve_params(spec_data, details.get("parameters", []))
+            merged = {p.get("name"): p for p in shared_params if p.get("name")}
+            for p in op_params:
+                if p.get("name"):
+                    merged[p["name"]] = p
+            parameters = list(merged.values())
+
+            # Resolve a $ref request body so downstream code can detect it.
+            request_body = details.get("requestBody", {}) or {}
+            if isinstance(request_body, dict) and "$ref" in request_body:
+                request_body = _resolve_ref(spec_data, request_body["$ref"])
+
             parsed_tools[operation_id] = {
                 "operation_id": operation_id,
                 "name": details.get("summary", f"{method.upper()} {path}"),
                 "description": details.get("description", details.get("summary", "No description")),
                 "path": path,
                 "method": method.upper(),
-                "parameters": details.get("parameters", []),
-                "request_body": details.get("requestBody", {}),
+                "parameters": parameters,
+                "request_body": request_body,
+                "tags": details.get("tags", []) or [],
             }
 
     storage = load_storage()
@@ -118,6 +168,7 @@ class ToolsetItem(BaseModel):
     description: str
     parameters: List[Any] = []
     selected: bool = True
+    source_id: str = ""
 
     @field_validator("parameters", mode="before")
     @classmethod

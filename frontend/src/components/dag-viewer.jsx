@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import * as d3 from "d3"
-import { Search, X, ZoomIn, ZoomOut, Maximize2, RefreshCw, AlertCircle, Loader2 } from "lucide-react"
+import { Search, X, ZoomIn, ZoomOut, Maximize2, RefreshCw, AlertCircle, Loader2, Copy, Check } from "lucide-react"
 
 const API_BASE = ""
 
@@ -38,10 +38,27 @@ function StatsBar({ summary }) {
 
 // ── Node detail panel ────────────────────────────────────────────────────────
 function DetailPanel({ node, links, onClose }) {
+  const [copied, setCopied] = useState(false)
   if (!node) return null
   const c = methodColor(node.method)
   const incoming = links.filter(l => (l.target?.id ?? l.target) === node.id).map(l => l.source?.id ?? l.source)
   const outgoing = links.filter(l => (l.source?.id ?? l.source) === node.id).map(l => l.target?.id ?? l.target)
+
+  // Build a ready-to-use payload for the Agent Playground (manual mode / proxy call).
+  const placeholders = [...String(node.path).matchAll(/\{([^}]+)\}/g)].map(m => m[1])
+  const playgroundPayload = {
+    method: node.method,
+    path: node.path,
+    summary: node.summary,
+    path_params: Object.fromEntries(placeholders.map(p => [p, ""])),
+    query_params: {},
+    body: {},
+  }
+  const copyForPlayground = () => {
+    navigator.clipboard.writeText(JSON.stringify(playgroundPayload, null, 2))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <div className="absolute right-4 top-4 z-20 w-80 rounded-xl border border-[#E5E7EB] bg-white/95 p-4 shadow-sm backdrop-blur-md">
@@ -59,6 +76,14 @@ function DetailPanel({ node, links, onClose }) {
       {node.summary && node.summary !== node.path && (
         <p className="text-xs text-[#6B7280] mb-3 leading-relaxed">{node.summary}</p>
       )}
+
+      <button
+        onClick={copyForPlayground}
+        className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] py-2 text-[11px] font-semibold text-[#374151] transition hover:bg-[#F3F4F6] hover:text-[#111827]"
+      >
+        {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+        {copied ? "Copied for Playground" : "Copy for Playground"}
+      </button>
 
       <div className="space-y-2">
         {incoming.length > 0 && (

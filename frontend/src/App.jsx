@@ -8,6 +8,21 @@ import { DagViewer } from "@/components/dag-viewer"
 import { IngestionWizard } from "@/components/ingestion-wizard"
 import { ToolsetManager } from "@/components/toolset-manager"
 import { AgentPlayground } from "@/components/agent-playground"
+import { WorkflowView } from "@/components/workflow-view"
+import { ResourcePage } from "@/components/resource-page"
+import { EnvironmentsPage } from "@/components/environments-page"
+import { McpPage } from "@/components/mcp-page"
+import { SdkPage } from "@/components/sdk-page"
+import { PromptsPage } from "@/components/prompts-page"
+import { CustomToolsPage } from "@/components/custom-tools-page"
+
+const RESOURCE_TABS = {
+  "custom-tools": "Custom Tools",
+  prompts: "Prompts",
+  environments: "Environments",
+  mcp: "MCP",
+  sdks: "SDK",
+}
 
 const pageMeta = {
   ingest: {
@@ -25,6 +40,30 @@ const pageMeta = {
   dag: {
     title: "DAG Viewer",
     description: "Endpoint dependency graph.",
+  },
+  workflows: {
+    title: "Workflow Proxy",
+    description: "Cluster raw endpoints into workflow-level MCP tools.",
+  },
+  "custom-tools": {
+    title: "Custom Tools",
+    description: "Compose higher-order tools from a toolset's operations.",
+  },
+  prompts: {
+    title: "Prompts",
+    description: "Reusable prompt templates for your toolsets.",
+  },
+  environments: {
+    title: "Environments",
+    description: "Variable and secret sets, kept separate from tool logic.",
+  },
+  mcp: {
+    title: "MCP",
+    description: "Connect an MCP client to a toolset over SSE.",
+  },
+  sdks: {
+    title: "SDKs",
+    description: "Generated client code for a toolset's tools.",
   },
 }
 
@@ -177,6 +216,22 @@ export default function App() {
 
     if (activePage === "playground") {
       return <AgentPlayground tools={tools} />
+    }
+
+    if (activePage === "workflows") {
+      return <WorkflowView />
+    }
+
+    // Dedicated, purpose-built pages for the resource sidebar ids.
+    if (activePage === "environments") return <EnvironmentsPage />
+    if (activePage === "mcp") return <McpPage />
+    if (activePage === "sdks") return <SdkPage />
+    if (activePage === "prompts") return <PromptsPage />
+    if (activePage === "custom-tools") return <CustomToolsPage />
+
+    // Fallback (kept for safety): generic ResourcePage wrapper over ToolsetExtras.
+    if (RESOURCE_TABS[activePage]) {
+      return <ResourcePage tab={RESOURCE_TABS[activePage]} />
     }
 
     return <DagViewer />

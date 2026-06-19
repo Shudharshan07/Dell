@@ -120,46 +120,94 @@ async def save_workflow(args: SaveWorkflowArgs) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Dynamically register all ingested OpenAPI tools
+# Register WORKFLOW-LEVEL tools (the Workflow Proxy output)
+#
+# Instead of one MCP tool per endpoint (100-500+ tools, 50k+ tokens), we expose
+# one coarse tool per workflow cluster (~10-30 tools). Each takes an `operation`
+# selector + generic params and dispatches through the workflow execute endpoint.
 # ---------------------------------------------------------------------------
 import re
+from app.workflows import cluster_source, workflow_tool_schema
 
-def make_dynamic_tool(sid: str, oid: str):
-    async def dynamic_tool(
+BACKEND = "http://127.0.0.1:8000"
+
+
+# ---------------------------------------------------------------------------
+# Enhancement 1 — progressive disclosure: search + describe MCP tools.
+# Workflow tools are registered with DEFERRED (catalog-free) descriptions; the
+# agent uses these two tools to discover specific operations on demand.
+# ---------------------------------------------------------------------------
+@mcp.tool()
+async def search_operations(source_id: str, query: str) -> str:
+    """Search a source's workflow operations by keyword (operation_id, summary,
+    path). Returns up to 10 matches with their workflow_id, method, path. Use
+    this to find the right `operation` before calling a workflow tool."""
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            r = await client.get(f"{BACKEND}/api/v1/workflows/search",
+                                  params={"source_id": source_id, "query": query})
+            return json.dumps(r.json(), indent=2)
+        except Exception as e:
+            return f"❌ search_operations failed: {str(e)}"
+
+
+@mcp.tool()
+async def describe_operation(source_id: str, operation_id: str) -> str:
+    """Return the full input schema (path/query/body params) for one operation,
+    plus its owning workflow_id. Call after search_operations to learn exactly
+    what params an operation needs."""
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            r = await client.get(f"{BACKEND}/api/v1/workflows/operation",
+                                  params={"source_id": source_id, "operation_id": operation_id})
+            return json.dumps(r.json(), indent=2)
+        except Exception as e:
+            return f"❌ describe_operation failed: {str(e)}"
+
+
+def make_workflow_tool(sid: str, wf_id: str):
+    async def workflow_tool(
+        operation: str,
         path_params: dict = {},
         query_params: dict = {},
-        body: dict = {}
+        body: dict = {},
     ) -> str:
-        """Dynamically executes this specific OpenAPI tool."""
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        """Executes one operation (or the __report__ orchestration) within this workflow."""
+        async with httpx.AsyncClient(timeout=60.0) as client:
             try:
                 response = await client.post(
-                    "http://127.0.0.1:8000/api/v1/proxy/call",
+                    "http://127.0.0.1:8000/api/v1/workflows/execute",
                     json={
                         "source_id": sid,
-                        "operation_id": oid,
+                        "workflow_id": wf_id,
+                        "operation": operation,
                         "path_params": path_params,
                         "query_params": query_params,
-                        "body": body
+                        "body": body,
                     },
                 )
                 return json.dumps(response.json(), indent=2)
             except Exception as e:
-                return f"❌ Tool execution failed: {str(e)}"
-    return dynamic_tool
+                return f"❌ Workflow execution failed: {str(e)}"
+    return workflow_tool
+
 
 try:
     storage = load_storage()
+    registered = 0
     for source_id, source_data in storage.get("sources", {}).items():
-        for op_id, tool_data in source_data.get("tools", {}).items():
-            # FastMCP tool names must match ^[a-zA-Z0-9_-]+$
-            clean_name = re.sub(r'[^a-zA-Z0-9_-]', '_', op_id)
-            description = tool_data.get("description", f"Execute {op_id} on {source_id}")
-            
-            # Register the dynamic tool on the FastMCP instance
-            mcp.tool(name=clean_name, description=description)(
-                make_dynamic_tool(source_id, op_id)
+        workflows = (storage.get("workflow_defs") or {}).get(source_id) or cluster_source(source_data)
+        for wf in workflows:
+            # Enhancement 1: register with deferred (catalog-free) descriptions.
+            schema = workflow_tool_schema(wf, defer_catalog=True)
+            # unique, MCP-safe tool name across sources
+            clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", f"{source_id}_{wf['id']}")[:64]
+            mcp.tool(name=clean_name, description=schema["description"])(
+                make_workflow_tool(source_id, wf["id"])
             )
+            registered += 1
+    print(f"[OK] Registered {registered} workflow-level MCP tools across "
+          f"{len(storage.get('sources', {}))} source(s).")
 except Exception as e:
-    print(f"⚠️ Failed to dynamically register tools: {e}")
+    print(f"[WARN] Failed to register workflow tools: {e}")
 

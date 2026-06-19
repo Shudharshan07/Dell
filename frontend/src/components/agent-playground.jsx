@@ -33,21 +33,21 @@ export function AgentPlayground({ tools }) {
 
   return (
     <section className="grid h-full min-h-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_24rem]">
-      <div className="flex min-h-0 flex-col border-r border-neutral-800">
-        <div className="border-b border-neutral-800 bg-neutral-900/50 px-4 py-3">
-          <h2 className="text-sm font-semibold text-neutral-100">Agent Playground</h2>
-          <p className="text-xs text-neutral-500">Send prompts and inspect the execution chain as it develops.</p>
+      <div className="flex min-h-0 flex-col border-r border-[#E5E7EB] bg-[#FAFAFA]">
+        <div className="border-b border-[#E5E7EB] bg-white px-6 py-4">
+          <h2 className="text-sm font-semibold text-[#111827]">Agent Playground</h2>
+          <p className="mt-1 text-sm text-[#6B7280]">Send prompts and inspect the execution chain as it develops.</p>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <div className="mx-auto flex max-w-3xl flex-col gap-3">
             {messages.map((item, index) => (
               <div
                 key={`${item.role}-${index}`}
-                className={`max-w-[82%] rounded-lg border px-4 py-3 text-sm ${
+                className={`max-w-[82%] rounded-xl border px-4 py-3 text-sm leading-6 ${
                   item.role === "user"
-                    ? "ml-auto border-cyan-500/30 bg-cyan-500/10 text-cyan-50"
-                    : "border-neutral-800 bg-neutral-900 text-neutral-200"
+                    ? "ml-auto border-[#111827] bg-[#111827] text-white"
+                    : "border-[#E5E7EB] bg-white text-[#374151]"
                 }`}
               >
                 {item.content}
@@ -56,15 +56,15 @@ export function AgentPlayground({ tools }) {
           </div>
         </div>
 
-        <form onSubmit={sendMessage} className="border-t border-neutral-800 bg-neutral-900 p-3">
+        <form onSubmit={sendMessage} className="border-t border-[#E5E7EB] bg-white p-4">
           <div className="mx-auto flex max-w-3xl gap-2">
             <Input
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Ask the agent to perform a workflow"
-              className="border-neutral-800 bg-neutral-950"
+              className="workspace-input"
             />
-            <Button type="submit" className="bg-cyan-400 text-neutral-950 hover:bg-cyan-300">
+            <Button type="submit" className="bg-[#111827] text-white hover:bg-black">
               <Send />
               Send
             </Button>
@@ -72,47 +72,49 @@ export function AgentPlayground({ tools }) {
         </form>
       </div>
 
-      <aside className="flex min-h-0 flex-col bg-neutral-900">
-        <div className="border-b border-neutral-800 px-4 py-3">
+      <aside className="flex min-h-0 flex-col bg-white">
+        <div className="border-b border-[#E5E7EB] px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-neutral-100">Live Execution Trace</h3>
-              <p className="text-xs text-neutral-500">{selectedTools.length || 0} curated tools available</p>
+              <h3 className="text-sm font-semibold text-[#111827]">Live Execution Trace</h3>
+              <p className="mt-1 text-xs text-[#6B7280]">{selectedTools.length || 0} curated tools available</p>
             </div>
-            <Play className="size-4 text-cyan-300" />
+            <div className="workspace-icon-box size-8">
+              <Play className="size-4" />
+            </div>
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          <div className="mb-4 rounded-lg border border-neutral-800 bg-neutral-950 p-3">
-            <div className="flex items-center gap-2 text-sm text-neutral-100">
-              <Bot className="size-4 text-cyan-300" />
+        <div className="min-h-0 flex-1 overflow-y-auto p-5">
+          <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-[#111827]">
+              <Bot className="size-4" />
               Active Toolset
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {(selectedTools.length ? selectedTools : tools.slice(0, 3)).map((tool) => (
-                <span key={tool.id} className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-1 font-mono text-xs text-neutral-300">
+                <span key={tool.id} className="workspace-pill font-mono">
                   {tool.id}
                 </span>
               ))}
-              {tools.length === 0 && <span className="text-xs text-neutral-500">No ingested tools yet.</span>}
+              {tools.length === 0 && <span className="text-xs text-[#6B7280]">No ingested tools yet.</span>}
             </div>
           </div>
 
           <div className="space-y-3">
             {trace.map((step) => (
-              <div key={step.id} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+              <div key={step.id} className="rounded-xl border border-[#E5E7EB] bg-white p-4 transition duration-150 hover:bg-[#FAFAFA]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <Wrench className="size-4 text-cyan-300" />
-                    <span className="text-sm font-medium text-neutral-100">{step.label}</span>
+                    <Wrench className="size-4 text-[#111827]" />
+                    <span className="text-sm font-medium text-[#111827]">{step.label}</span>
                   </div>
-                  <span className="flex items-center gap-1 text-xs text-neutral-500">
+                  <span className="flex items-center gap-1 text-xs text-[#6B7280]">
                     <Clock3 className="size-3" />
                     {step.duration}
                   </span>
                 </div>
-                <p className="mt-2 text-xs text-neutral-500">{step.detail}</p>
+                <p className="mt-2 text-xs leading-5 text-[#6B7280]">{step.detail}</p>
               </div>
             ))}
           </div>

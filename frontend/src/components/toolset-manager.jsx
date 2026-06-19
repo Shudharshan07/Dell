@@ -50,89 +50,111 @@ export function ToolsetManager({ tools, onToolsChange }) {
 
   return (
     <section className="grid h-full min-h-0 grid-rows-[auto_1fr] overflow-hidden">
-      <div className="border-b border-neutral-800 bg-neutral-900/50 px-4 py-3">
+      <div className="border-b border-[#E5E7EB] bg-white px-6 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-neutral-100">Dynamic Toolset Manager</h2>
-            <p className="text-xs text-neutral-500">Keep curated groups focused: 5-30 tools is the recommended operating window.</p>
+            <h2 className="text-sm font-semibold text-[#111827]">Dynamic Toolset Manager</h2>
+            <p className="mt-1 text-sm text-[#6B7280]">Keep curated groups focused: 5-30 tools is the recommended operating window.</p>
           </div>
-          <div className="rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs text-neutral-300">
+          <div className="workspace-pill">
             {selectedTools.length} selected
           </div>
         </div>
       </div>
 
-      <div className="grid min-h-0 gap-4 p-4 lg:grid-cols-[minmax(19rem,0.9fr)_minmax(0,1.1fr)]">
-        <div className="flex min-h-0 flex-col rounded-lg border border-neutral-800 bg-neutral-900">
-          <div className="border-b border-neutral-800 p-3">
+      <div className="grid min-h-0 gap-6 p-6 lg:grid-cols-[minmax(22rem,0.95fr)_minmax(0,1.05fr)]">
+        <div className="workspace-card flex min-h-0 flex-col overflow-hidden">
+          <div className="workspace-card-header">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 size-4 text-neutral-500" />
+              <Search className="absolute left-3 top-2.5 size-4 text-[#9CA3AF]" />
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search parsed routes"
-                className="border-neutral-800 bg-neutral-950 pl-8 text-sm"
+                className="workspace-input pl-9 text-sm"
               />
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">
-            {filteredTools.map((tool) => (
-              <label key={tool.id} className="mb-2 flex cursor-pointer gap-3 rounded-md border border-neutral-800 bg-neutral-950 p-3 hover:border-neutral-700">
-                <input
-                  type="checkbox"
-                  checked={Boolean(tool.selected)}
-                  onChange={(event) => updateTool(tool.id, { selected: event.target.checked })}
-                  className="mt-1 size-4 accent-cyan-400"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] font-bold text-cyan-300">{tool.method}</span>
-                    <span className="truncate font-mono text-xs text-neutral-100">{tool.path}</span>
-                  </span>
-                  <span className="mt-1 block line-clamp-2 text-xs text-neutral-500">{tool.description}</span>
-                </span>
-              </label>
-            ))}
+          <div className="min-h-0 flex-1 overflow-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="sticky top-0 z-10 border-b border-[#E5E7EB] bg-[#FAFAFA] text-xs font-medium text-[#6B7280]">
+                <tr>
+                  <th className="w-10 px-4 py-3"></th>
+                  <th className="px-3 py-3">Route</th>
+                  <th className="px-3 py-3">Method</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {filteredTools.map((tool) => (
+                  <tr key={tool.id} className="transition duration-150 hover:bg-[#FAFAFA]">
+                    <td className="px-4 py-3 align-top">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(tool.selected)}
+                        onChange={(event) => updateTool(tool.id, { selected: event.target.checked })}
+                        className="size-4 rounded border-[#D1D5DB] accent-[#111827]"
+                        aria-label={`Select ${tool.id}`}
+                      />
+                    </td>
+                    <td className="min-w-0 px-3 py-3">
+                      <p className="truncate font-mono text-xs font-medium text-[#111827]">{tool.path}</p>
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#6B7280]">{tool.description}</p>
+                    </td>
+                    <td className="px-3 py-3 align-top">
+                      <span className="workspace-pill font-mono">{tool.method}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredTools.length === 0 && (
+              <div className="flex min-h-48 items-center justify-center text-sm text-[#6B7280]">
+                No tools match the current filters.
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-col rounded-lg border border-neutral-800 bg-neutral-900">
-          <div className="flex items-center gap-2 border-b border-neutral-800 px-4 py-3">
-            <Settings2 className="size-4 text-cyan-300" />
-            <h3 className="text-sm font-semibold text-neutral-100">Curated Tool Configuration</h3>
+        <div className="workspace-card flex min-h-0 flex-col overflow-hidden">
+          <div className="workspace-card-header flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Settings2 className="size-4 text-[#111827]" />
+              <h3 className="workspace-title">Curated Tool Configuration</h3>
+            </div>
+            <span className="workspace-pill">Form</span>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
             {selectedTools.length === 0 && (
-              <div className="flex h-full items-center justify-center rounded-md border border-dashed border-neutral-800 text-sm text-neutral-500">
+              <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-[#D1D5DB] bg-[#FAFAFA] text-sm text-[#6B7280]">
                 Select routes from the left pane to configure tool metadata.
               </div>
             )}
 
             <div className="space-y-3">
               {selectedTools.map((tool) => (
-                <details key={tool.id} open className="rounded-lg border border-neutral-800 bg-neutral-950">
+                <details key={tool.id} open className="rounded-xl border border-[#E5E7EB] bg-white">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
                     <span className="min-w-0">
-                      <span className="block truncate font-mono text-xs text-neutral-100">{tool.id}</span>
-                      <span className="text-xs text-neutral-500">{tool.method} {tool.path}</span>
+                      <span className="block truncate font-mono text-xs font-medium text-[#111827]">{tool.id}</span>
+                      <span className="text-xs text-[#6B7280]">{tool.method} {tool.path}</span>
                     </span>
-                    <Check className="size-4 shrink-0 text-emerald-300" />
+                    <Check className="size-4 shrink-0 text-[#111827]" />
                   </summary>
-                  <div className="space-y-3 border-t border-neutral-800 p-4">
+                  <div className="space-y-4 border-t border-[#E5E7EB] p-4">
                     <label className="block">
-                      <span className="mb-1 block text-xs text-neutral-500">Description override</span>
+                      <span className="mb-1.5 block text-xs font-medium text-[#374151]">Description override</span>
                       <textarea
                         value={tool.description}
                         onChange={(event) => updateTool(tool.id, { description: event.target.value })}
-                        className="min-h-20 w-full resize-none rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-cyan-400"
+                        className="min-h-24 w-full resize-none rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#111827] outline-none transition focus:border-[#111827] focus:ring-4 focus:ring-[#111827]/10"
                       />
                     </label>
                     <div>
-                      <p className="mb-2 text-xs text-neutral-500">Parameters</p>
+                      <p className="mb-2 text-xs font-medium text-[#374151]">Parameters</p>
                       <div className="flex flex-wrap gap-2">
                         {(tool.parameters ?? []).map((parameter) => (
-                          <span key={parameter} className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-1 font-mono text-xs text-neutral-300">
+                          <span key={parameter} className="workspace-pill font-mono">
                             {parameter}
                           </span>
                         ))}
@@ -144,8 +166,8 @@ export function ToolsetManager({ tools, onToolsChange }) {
             </div>
           </div>
 
-          <div className="border-t border-neutral-800 p-3">
-            <Button className="w-full bg-cyan-400 text-neutral-950 hover:bg-cyan-300" disabled={selectedTools.length === 0}>
+          <div className="border-t border-[#E5E7EB] bg-[#FAFAFA] p-4">
+            <Button className="w-full bg-[#111827] text-white hover:bg-black" disabled={selectedTools.length === 0}>
               Save Toolset
             </Button>
           </div>

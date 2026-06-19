@@ -97,41 +97,41 @@
 
 :root {
 
-    --background: oklch(1 0 0);
+    --background: #FAFAFA;
 
-    --foreground: oklch(0.145 0 0);
+    --foreground: #111827;
 
-    --card: oklch(1 0 0);
+    --card: #FFFFFF;
 
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: #111827;
 
-    --popover: oklch(1 0 0);
+    --popover: #FFFFFF;
 
-    --popover-foreground: oklch(0.145 0 0);
+    --popover-foreground: #111827;
 
-    --primary: oklch(0.205 0 0);
+    --primary: #111827;
 
-    --primary-foreground: oklch(0.985 0 0);
+    --primary-foreground: #FFFFFF;
 
-    --secondary: oklch(0.97 0 0);
+    --secondary: #FFFFFF;
 
-    --secondary-foreground: oklch(0.205 0 0);
+    --secondary-foreground: #111827;
 
-    --muted: oklch(0.97 0 0);
+    --muted: #F7F7F7;
 
-    --muted-foreground: oklch(0.556 0 0);
+    --muted-foreground: #6B7280;
 
-    --accent: oklch(0.97 0 0);
+    --accent: #F3F4F6;
 
-    --accent-foreground: oklch(0.205 0 0);
+    --accent-foreground: #111827;
 
-    --destructive: oklch(0.577 0.245 27.325);
+    --destructive: #DC2626;
 
-    --border: oklch(0.922 0 0);
+    --border: #E5E7EB;
 
-    --input: oklch(0.922 0 0);
+    --input: #E5E7EB;
 
-    --ring: oklch(0.708 0 0);
+    --ring: #111827;
 
     --chart-1: oklch(0.87 0 0);
 
@@ -143,23 +143,23 @@
 
     --chart-5: oklch(0.269 0 0);
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    --sidebar: oklch(0.985 0 0);
+    --sidebar: #F7F7F7;
 
-    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-foreground: #111827;
 
-    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary: #111827;
 
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-primary-foreground: #FFFFFF;
 
-    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent: #EDEFF2;
 
-    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-accent-foreground: #111827;
 
-    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-border: #E5E7EB;
 
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar-ring: #111827;
 }
 
 .dark {
@@ -237,4 +237,38 @@
   html {
     @apply font-sans;
     }
+}
+
+@layer components {
+  .workspace-card {
+    @apply rounded-xl border border-[#E5E7EB] bg-white;
+  }
+
+  .workspace-card-header {
+    @apply border-b border-[#E5E7EB] px-5 py-4;
+  }
+
+  .workspace-title {
+    @apply text-sm font-semibold text-[#111827];
+  }
+
+  .workspace-description {
+    @apply mt-1 text-sm text-[#6B7280];
+  }
+
+  .workspace-subtle {
+    @apply text-xs text-[#9CA3AF];
+  }
+
+  .workspace-pill {
+    @apply inline-flex items-center rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-2 py-1 text-xs font-medium text-[#6B7280];
+  }
+
+  .workspace-input {
+    @apply border-[#E5E7EB] bg-white text-[#111827] placeholder:text-[#9CA3AF] focus-visible:border-[#111827] focus-visible:ring-[#111827]/10;
+  }
+
+  .workspace-icon-box {
+    @apply flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] text-[#111827];
+  }
 }

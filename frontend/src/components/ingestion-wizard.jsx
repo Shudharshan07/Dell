@@ -96,17 +96,30 @@ export function IngestionWizard({ onIngestionComplete }) {
 
   return (
     <section className="h-full overflow-auto">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 lg:p-6">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-            <div className="mb-5 flex items-start justify-between gap-4">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            ["Specs processed", toolCount || 0],
+            ["Parser status", loading ? "Parsing" : "Ready"],
+            ["Validation mode", "OpenAPI 3.x"],
+          ].map(([label, value]) => (
+            <div key={label} className="workspace-card p-5">
+              <p className="workspace-subtle">{label}</p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight text-[#111827]">{value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="workspace-card p-6">
+            <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-neutral-100">Ingest OpenAPI Definition</h2>
-                <p className="mt-1 max-w-2xl text-sm text-neutral-400">
+                <h2 className="text-base font-semibold text-[#111827]">Ingest OpenAPI Definition</h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-[#6B7280]">
                   Transform raw API documentation routes into unified executable MCP tool objects.
                 </p>
               </div>
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-300">
+              <div className="workspace-icon-box">
                 <FileCode2 className="size-5" />
               </div>
             </div>
@@ -114,11 +127,11 @@ export function IngestionWizard({ onIngestionComplete }) {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex min-h-56 w-full flex-col items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-950 px-4 text-center transition hover:border-cyan-400 hover:bg-neutral-900"
+              className="flex min-h-64 w-full flex-col items-center justify-center rounded-xl border border-dashed border-[#D1D5DB] bg-[#FAFAFA] px-4 text-center transition duration-200 hover:border-[#111827] hover:bg-white"
             >
-              <UploadCloud className="mb-3 size-9 text-cyan-300" />
-              <span className="text-sm font-medium text-neutral-100">Choose OpenAPI JSON or YAML</span>
-              <span className="mt-1 text-xs text-neutral-500">Parser logs and route counts stream below after upload.</span>
+              <UploadCloud className="mb-3 size-9 text-[#111827]" />
+              <span className="text-sm font-medium text-[#111827]">Choose OpenAPI JSON or YAML</span>
+              <span className="mt-1 text-xs text-[#6B7280]">Parser logs and route counts stream below after upload.</span>
             </button>
 
             <Input
@@ -131,38 +144,49 @@ export function IngestionWizard({ onIngestionComplete }) {
             />
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Button onClick={() => fileRef.current?.click()} disabled={loading} className="bg-cyan-400 text-neutral-950 hover:bg-cyan-300">
+              <Button onClick={() => fileRef.current?.click()} disabled={loading} className="bg-[#111827] text-white hover:bg-black">
                 {loading ? <Loader2 className="animate-spin" /> : <UploadCloud />}
                 Upload Spec
               </Button>
-              {lastFile && <span className="text-xs text-neutral-500">{lastFile}</span>}
+              <Button variant="outline" disabled={loading} className="border-[#E5E7EB] bg-white text-[#111827] hover:bg-[#F3F4F6]">
+                Configure parser
+              </Button>
+              {lastFile && <span className="text-xs text-[#6B7280]">{lastFile}</span>}
             </div>
           </div>
 
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-            <h3 className="text-sm font-semibold text-neutral-100">Ingestion Status</h3>
-            <div className="mt-4 grid gap-3">
-              <div className="rounded-md border border-neutral-800 bg-neutral-950 p-3">
-                <p className="text-xs text-neutral-500">Generated tools</p>
-                <p className="mt-1 text-2xl font-semibold text-neutral-100">{toolCount}</p>
+          <div className="workspace-card p-5">
+            <h3 className="workspace-title">Ingestion Status</h3>
+            <p className="workspace-description">Live parser state and validation feedback.</p>
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+                <p className="workspace-subtle">Generated tools</p>
+                <p className="mt-1 text-2xl font-semibold text-[#111827]">{toolCount}</p>
               </div>
-              <div className="rounded-md border border-neutral-800 bg-neutral-950 p-3">
-                <p className="text-xs text-neutral-500">State</p>
-                <p className="mt-1 flex items-center gap-2 text-sm text-emerald-300">
+              <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+                <p className="workspace-subtle">State</p>
+                <p className="mt-1 flex items-center gap-2 text-sm font-medium text-[#111827]">
                   {loading ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
                   {loading ? "Parsing" : "Ready"}
                 </p>
+              </div>
+              <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+                <p className="workspace-subtle">Validation</p>
+                <p className="mt-1 text-sm font-medium text-[#111827]">No blocking issues</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900">
-          <div className="flex items-center gap-2 border-b border-neutral-800 px-4 py-3">
-            <Terminal className="size-4 text-emerald-300" />
-            <h3 className="text-sm font-semibold text-neutral-100">Parser Terminal</h3>
+        <div className="workspace-card overflow-hidden">
+          <div className="workspace-card-header flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Terminal className="size-4 text-[#111827]" />
+              <h3 className="workspace-title">Parser Terminal</h3>
+            </div>
+            <span className="workspace-pill">Streaming</span>
           </div>
-          <div className="max-h-64 overflow-y-auto bg-neutral-950 p-4 font-mono text-xs text-emerald-300">
+          <div className="max-h-64 overflow-y-auto bg-white p-4 font-mono text-xs leading-6 text-[#374151]">
             {logs.map((log, index) => (
               <div key={`${log}-${index}`}>&gt; {log}</div>
             ))}

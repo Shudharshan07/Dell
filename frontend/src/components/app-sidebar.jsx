@@ -1,80 +1,110 @@
-import { Bot, ChevronDown, FileUp, Network, Settings, SlidersHorizontal, Workflow } from "lucide-react"
+import {
+  SlidersHorizontal,
+  FolderOpen,
+  Wrench,
+  FileCode,
+  Globe,
+  Bot,
+  Layers,
+  Code,
+  Network,
+  ChevronsUpDown,
+} from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const items = [
-  { id: "ingest", title: "Ingestion", icon: FileUp },
+const createItems = [
   { id: "tools", title: "Toolsets", icon: SlidersHorizontal },
+  { id: "ingest", title: "Your APIs", icon: FolderOpen },
+  { id: "custom-tools", title: "Custom Tools", icon: Wrench, disabled: true },
+  { id: "prompts", title: "Prompts", icon: FileCode, disabled: true },
+  { id: "environments", title: "Environments", icon: Globe, disabled: true },
+]
+
+const consumeItems = [
   { id: "playground", title: "Playground", icon: Bot },
   { id: "dag", title: "DAG Viewer", icon: Network },
+  { id: "mcp", title: "MCP", icon: Layers, disabled: true },
+  { id: "sdks", title: "SDKs", icon: Code, disabled: true },
 ]
 
 export function AppSidebar({ activePage, onPageChange }) {
   return (
-    <Sidebar collapsible="icon" className="border-r border-[#E5E7EB] bg-[#F7F7F7]">
-      <SidebarHeader className="px-3 pb-3 pt-4">
-        <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#111827]">
-            <Workflow className="size-4 text-white" />
-          </div>
-          <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="whitespace-nowrap text-sm font-semibold text-[#111827]">Dell Project Workspace</span>
-            <span className="text-xs text-[#6B7280]">Enterprise MCP</span>
-          </div>
+    <Sidebar collapsible="icon" className="border-r border-[#D0CECA] bg-[#E3E1DC]">
+      <SidebarHeader className="px-6 pb-2 pt-6">
+        <div className="flex items-baseline gap-1.5 overflow-hidden">
+          <span className="font-serif text-[26px] font-bold tracking-tight text-[#111827]">Dell</span>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-1 px-2 py-3">
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-            <span className="flex w-full items-center justify-between text-[11px] uppercase tracking-wide text-[#9CA3AF]">
-              Workspace
-              <ChevronDown className="size-3" />
-            </span>
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
+      <SidebarContent className="gap-5 px-3 py-4">
+        {/* CREATE SECTION */}
+        <div className="space-y-1">
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#787670]">Create</span>
+          <SidebarMenu className="mt-1">
+            {createItems.map((item) => {
+              const isActive = activePage === item.id || (item.id === "tools" && activePage === "tools")
+              return (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    isActive={activePage === item.id}
+                    isActive={isActive}
                     tooltip={item.title}
-                    onClick={() => onPageChange(item.id)}
-                    className="rounded-lg text-[#6B7280] transition duration-200 hover:bg-[#EDEFF2] hover:text-[#111827] data-active:bg-[#EDEFF2] data-active:text-[#111827] data-active:shadow-none"
+                    onClick={() => !item.disabled && onPageChange(item.id)}
+                    className={`rounded-lg text-[#55534E] font-medium transition-all duration-150 hover:bg-[#D4D2CD] hover:text-[#111827] data-active:bg-[#D4D2CD] data-active:text-[#111827] data-active:shadow-none ${item.disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                      }`}
                   >
-                    <item.icon />
+                    <item.icon className="size-4" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-            <span className="text-[11px] uppercase tracking-wide text-[#9CA3AF]">Admin</span>
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings" className="rounded-lg text-[#6B7280] transition duration-200 hover:bg-[#EDEFF2] hover:text-[#111827]">
-                  <Settings />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+              )
+            })}
+          </SidebarMenu>
+        </div>
+
+        {/* CONSUME SECTION */}
+        <div className="space-y-1">
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#787670]">Consume</span>
+          <SidebarMenu className="mt-1">
+            {consumeItems.map((item) => {
+              const isActive = activePage === item.id
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    tooltip={item.title}
+                    onClick={() => !item.disabled && onPageChange(item.id)}
+                    className={`rounded-lg text-[#55534E] font-medium transition-all duration-150 hover:bg-[#D4D2CD] hover:text-[#111827] data-active:bg-[#D4D2CD] data-active:text-[#111827] data-active:shadow-none ${item.disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </div>
       </SidebarContent>
+
+      <SidebarFooter className="p-3 border-t border-[#D0CECA] bg-[#E3E1DC]">
+        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-[#D4D2CD] cursor-pointer transition-all duration-150 group">
+          <div className="size-8 rounded-lg bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400 shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105" />
+          <div className="flex-1 min-w-0 leading-tight">
+            <p className="text-xs font-semibold text-[#111827] truncate">georges</p>
+            <p className="text-[10px] text-[#787670] truncate">speakeasy-team</p>
+          </div>
+          <ChevronsUpDown className="size-3.5 text-[#787670] shrink-0" />
+        </div>
+      </SidebarFooter>
     </Sidebar>
   )
 }
+

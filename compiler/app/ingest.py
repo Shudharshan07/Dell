@@ -123,6 +123,7 @@ class ToolsetItem(BaseModel):
 class ToolsetSaveRequest(BaseModel):
     toolset_id: str
     tools: List[ToolsetItem]
+    description: str = "New Toolset Description"
 
 
 @router.post("/toolsets")
@@ -136,7 +137,8 @@ async def save_toolset(req: ToolsetSaveRequest):
         
     storage["toolsets"][req.toolset_id] = {
         "toolset_id": req.toolset_id,
-        "tools": [tool.model_dump() for tool in req.tools]
+        "tools": [tool.model_dump() for tool in req.tools],
+        "description": req.description
     }
     save_storage(storage)
     return {"status": "success", "message": f"Toolset '{req.toolset_id}' saved successfully"}
@@ -146,7 +148,11 @@ async def save_toolset(req: ToolsetSaveRequest):
 async def list_toolsets():
     """Lists all saved toolsets."""
     storage = load_storage()
-    return storage.get("toolsets", {})
+    toolsets = storage.get("toolsets", {})
+    for tid, tval in toolsets.items():
+        if "description" not in tval:
+            tval["description"] = "New Toolset Description"
+    return toolsets
 
 
 @router.get("/toolsets/{toolset_id}")
@@ -156,5 +162,19 @@ async def get_toolset(toolset_id: str):
     toolset = storage.get("toolsets", {}).get(toolset_id)
     if not toolset:
         raise HTTPException(status_code=404, detail=f"Toolset '{toolset_id}' not found.")
+    if "description" not in toolset:
+        toolset["description"] = "New Toolset Description"
     return toolset
+
+
+@router.delete("/toolsets/{toolset_id}")
+async def delete_toolset(toolset_id: str):
+    """Removes a curated toolset from local storage."""
+    storage = load_storage()
+    if "toolsets" in storage and toolset_id in storage["toolsets"]:
+        del storage["toolsets"][toolset_id]
+        save_storage(storage)
+        return {"status": "deleted", "toolset_id": toolset_id}
+    raise HTTPException(status_code=404, detail=f"Toolset '{toolset_id}' not found.")
+
 

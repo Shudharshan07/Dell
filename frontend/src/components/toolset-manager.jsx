@@ -122,6 +122,16 @@ export function ToolsetManager({
     }
   }
 
+  // Normalize raw OpenAPI parameters (objects) to plain strings
+  const normalizeParams = (raw) => {
+    if (!Array.isArray(raw)) return []
+    return raw.map(p => {
+      if (typeof p === "string") return p
+      if (typeof p === "object" && p !== null) return p.name ?? p.id ?? JSON.stringify(p)
+      return String(p)
+    })
+  }
+
   // Handle creating new toolset
   const handleCreateToolset = async () => {
     if (!newName.trim() || !newSource) return
@@ -136,7 +146,7 @@ export function ToolsetManager({
           method: t.method ?? "POST",
           path: t.path ?? "/",
           description: t.description ?? t.summary ?? "Generated tool route",
-          parameters: t.parameters ?? [],
+          parameters: normalizeParams(t.parameters),
           selected: false // start with none selected
         }))
 
@@ -218,7 +228,7 @@ export function ToolsetManager({
           method: t.method ?? "POST",
           path: t.path ?? "/",
           description: t.description ?? t.summary ?? "Generated tool route",
-          parameters: t.parameters ?? [],
+          parameters: normalizeParams(t.parameters),
           selected: existingSelectedIds.has(t.operation_id ?? t.id ?? t.name)
         }))
 

@@ -2,8 +2,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 import yaml
 import json
-from typing import List
-from pydantic import BaseModel
+from typing import List, Any
+from pydantic import BaseModel, field_validator
 from app.storage import load_storage, save_storage
 
 router = APIRouter(prefix="/api/v1")
@@ -116,8 +116,24 @@ class ToolsetItem(BaseModel):
     method: str
     path: str
     description: str
-    parameters: List[str] = []
+    parameters: List[Any] = []
     selected: bool = True
+
+    @field_validator("parameters", mode="before")
+    @classmethod
+    def coerce_parameters(cls, v):
+        """Accept both string and object parameters; extract name if object."""
+        if not isinstance(v, list):
+            return []
+        result = []
+        for p in v:
+            if isinstance(p, str):
+                result.append(p)
+            elif isinstance(p, dict):
+                result.append(p.get("name") or p.get("id") or str(p))
+            else:
+                result.append(str(p))
+        return result
 
 
 class ToolsetSaveRequest(BaseModel):

@@ -10,11 +10,21 @@ if %errorlevel% neq 0 (
 
 echo.
 echo Starting backend...
-cd /d "D:\Projects\Dell\compiler"
-start "DAG Proxy Visualizer" cmd /k "venv\Scripts\activate && python main.py"
+cd /d "c:\All Files\Dell\compiler"
+start "API Proxy - FastAPI" cmd /k "venv\Scripts\activate && python main.py"
 
 timeout /t 2 /nobreak >nul
+
 echo.
-echo App running at: http://localhost:8000
+echo Starting MCP server...
+start "API Proxy - MCP" cmd /k "cd /d c:\All Files\Dell\compiler && venv\Scripts\activate && fastmcp run app/mcp_server.py --transport sse --port 8002"
+
+timeout /t 2 /nobreak >nul
+
+echo.
+echo ================================
+echo  FastAPI:   http://localhost:8000
+echo  MCP (SSE): http://localhost:8002/sse
+echo ================================
 echo.
 pause

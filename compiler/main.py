@@ -10,9 +10,16 @@ from fastapi.responses import FileResponse
 import networkx as nx
 import re
 import os
+import sys
 import glob
 
-app = FastAPI(title="MCP Workflow Proxy - Compiler Observability")
+# Ensure app/ sub-package is importable regardless of cwd
+sys.path.insert(0, os.path.dirname(__file__))
+
+from app.ingest import router as ingest_router
+from app.proxy import router as proxy_router
+
+app = FastAPI(title="Gram Local Execution Engine")
 
 # Clear CORS policy for React/Vite development local links
 app.add_middleware(

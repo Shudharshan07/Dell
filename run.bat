@@ -17,7 +17,7 @@ timeout /t 2 /nobreak >nul
 
 echo.
 echo Starting MCP server...
-start "API Proxy - MCP" cmd /k "cd /d c:\All Files\Dell\compiler && venv\Scripts\activate && fastmcp run app/mcp_server.py --transport sse --port 8002"
+start "API Proxy - MCP" cmd /k "venv\Scripts\activate && fastmcp run app/mcp_server.py --transport sse --port 8002"
 
 timeout /t 2 /nobreak >nul
 

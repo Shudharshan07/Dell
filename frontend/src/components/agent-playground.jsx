@@ -79,6 +79,12 @@ function TokenMeter({ usage, live }) {
   )
 }
 
+const TOKEN_BUDGET = 4000
+// Rough chars/4 token estimator matching backend heuristic
+function estimateTokens(toolDefs) {
+  return Math.ceil(JSON.stringify(toolDefs).length / 4)
+}
+
 export function AgentPlayground({ tools = [] }) {
   // ── shared selectors ──────────────────────────────────────────────────────
   const [mode, setMode] = useState("agent") // "agent" | "manual"
@@ -88,7 +94,7 @@ export function AgentPlayground({ tools = [] }) {
   const [toolsets, setToolsets] = useState([])
   const [toolsetId, setToolsetId] = useState("")
 
-  // ── tool source: "toolset" (existing) | "workflow" (compact deferred tools) ──
+  // ── tool source: "toolset" | "workflow" | "combined" ──────────────────────
   const [toolSource, setToolSource] = useState("workflow")
   const [sources, setSources] = useState([])
   const [sourceId, setSourceId] = useState("__auto__")
@@ -96,6 +102,12 @@ export function AgentPlayground({ tools = [] }) {
   const [allAgg, setAllAgg] = useState(null) // aggregate across all sources (1:∞)
   // Feature 2: per-message routing result captured from the `start` event.
   const [routed, setRouted] = useState(null) // {routed_workflows, route_terms, tool_count, aggregate_tool_count}
+
+  // ── combined mode: multi-select toolsets + sources ────────────────────────
+  const [selectedToolsetIds, setSelectedToolsetIds] = useState([])
+  const [selectedSourceIds, setSelectedSourceIds] = useState([])
+  // Token budget tracking: fetch deferred wf schema sizes from backend on source change
+  const [combinedTokenEst, setCombinedTokenEst] = useState(0)
 
   // ── agent state ───────────────────────────────────────────────────────────
   const [message, setMessage] = useState("")
@@ -148,10 +160,14 @@ export function AgentPlayground({ tools = [] }) {
       })
       .catch(() => setSources([]))
 
-    // aggregate tool count across ALL sources (powers the "All APIs (∞)" choice)
     fetch("/api/v1/agent/workflow-sources")
       .then((r) => r.json())
-      .then((d) => setAllAgg(d?.all ?? null))
+      .then((d) => {
+        setAllAgg(d?.all ?? null)
+        // also enrich sources with workflow_count
+        const wfMap = Object.fromEntries((d?.sources ?? []).map(s => [s.source_id, s.workflow_count]))
+        setSources(prev => prev.map(s => ({ ...s, workflow_count: wfMap[s.id] ?? s.workflow_count })))
+      })
       .catch(() => setAllAgg(null))
   }, [])
 
@@ -166,6 +182,34 @@ export function AgentPlayground({ tools = [] }) {
       .then((d) => setWfTools(d?.workflows ?? []))
       .catch(() => setWfTools([]))
   }, [sourceId])
+
+  // estimate combined token budget whenever selection changes
+  useEffect(() => {
+    if (toolSource !== "combined") { setCombinedTokenEst(0); return }
+    // fetch deferred wf schemas for each selected source and measure
+    const fetches = selectedSourceIds.map(sid =>
+      fetch(`/api/v1/workflows?source_id=${encodeURIComponent(sid)}`)
+        .then(r => r.json()).catch(() => ({ workflows: [] }))
+    )
+    Promise.all(fetches).then(results => {
+      // deferred schema: ~150 chars each (very small); use rough estimate
+      let tokens = 0
+      results.forEach(d => {
+        tokens += estimateTokens((d.workflows ?? []).map(w => ({
+          name: w.id,
+          description: `${w.name}: ${(w.operations ?? []).length} operations. Use search_operations.`,
+          input_schema: { type: "object", properties: { operation: { type: "string" } }, required: ["operation"] }
+        })))
+      })
+      // toolset raw tools: ~80 chars per selected tool
+      selectedToolsetIds.forEach(tsid => {
+        const ts = toolsets.find(t => t.toolset_id === tsid)
+        const count = (ts?.tools ?? []).filter(t => t.selected).length
+        tokens += count * 20 // rough: 80 chars / 4 per raw tool def
+      })
+      setCombinedTokenEst(tokens)
+    })
+  }, [toolSource, selectedSourceIds, selectedToolsetIds, toolsets])
 
   const activeProvider = useMemo(
     () => providers.find((p) => p.id === provider),
@@ -274,7 +318,13 @@ export function AgentPlayground({ tools = [] }) {
     const trimmed = message.trim()
     if (!trimmed || running) return
     const isWorkflow = toolSource === "workflow"
-    if (isWorkflow ? !sourceId : !toolsetId) {
+    const isCombined = toolSource === "combined"
+    if (isCombined) {
+      if (!selectedToolsetIds.length && !selectedSourceIds.length) {
+        setMessages(c => [...c, { role: "error", content: "Select at least one toolset or workflow source." }])
+        return
+      }
+    } else if (isWorkflow ? !sourceId : !toolsetId) {
       setMessages((c) => [
         ...c,
         { role: "error", content: isWorkflow ? "Select a source first." : "Select a toolset first." },
@@ -287,7 +337,9 @@ export function AgentPlayground({ tools = [] }) {
     setTrace([])
     setRouted(null)
 
-    const body = isWorkflow
+    const body = isCombined
+      ? { provider, model, mode: "combined", toolset_ids: selectedToolsetIds, source_ids: selectedSourceIds, token_budget: TOKEN_BUDGET, message: trimmed }
+      : isWorkflow
       ? { provider, model, mode: "workflow", source_id: sourceId, message: trimmed }
       : { provider, model, toolset_id: toolsetId, message: trimmed }
 
@@ -370,9 +422,9 @@ export function AgentPlayground({ tools = [] }) {
   return (
     <section className="grid h-full min-h-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_24rem]">
       {/* LEFT: controls + main panel */}
-      <div className="flex min-h-0 flex-col border-r border-[#E5E7EB] bg-[#FAFAFA]">
+      <div className="flex min-h-0 flex-col overflow-hidden border-r border-[#E5E7EB] bg-[#FAFAFA]">
         {/* control bar */}
-        <div className="space-y-3 border-b border-[#E5E7EB] bg-white px-6 py-4">
+        <div className="max-h-[45vh] shrink-0 overflow-y-auto space-y-3 border-b border-[#E5E7EB] bg-white px-6 py-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-[#111827]">Agent Playground</h2>
             <div className="flex rounded-lg border border-[#E5E7EB] p-0.5">
@@ -398,6 +450,7 @@ export function AgentPlayground({ tools = [] }) {
                 {[
                   ["toolset", "Toolset"],
                   ["workflow", "Workflows"],
+                  ["combined", "Combined"],
                 ].map(([v, label]) => (
                   <button
                     key={v}
@@ -414,6 +467,11 @@ export function AgentPlayground({ tools = [] }) {
               {toolSource === "workflow" && (
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700">
                   progressive disclosure
+                </span>
+              )}
+              {toolSource === "combined" && (
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  ≤{TOKEN_BUDGET} tokens
                 </span>
               )}
             </div>
@@ -443,6 +501,84 @@ export function AgentPlayground({ tools = [] }) {
               <p className="text-[10px] leading-3 text-amber-600 sm:col-span-3">
                 ⚠ Raw mode — all {selectedTools.length} tool schemas are sent to the model every turn. Switch to <b>Workflows</b> for ~10–50× fewer tokens.
               </p>
+            )}
+
+            {/* combined mode: multi-select toolsets + sources + token budget bar */}
+            {mode === "agent" && toolSource === "combined" && (
+              <div className="sm:col-span-3 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* toolsets */}
+                  <div>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Toolsets</p>
+                    <div className="max-h-32 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-2 space-y-1">
+                      {toolsets.length === 0 && <span className="text-[11px] text-[#9CA3AF]">No toolsets</span>}
+                      {toolsets.map(t => {
+                        const checked = selectedToolsetIds.includes(t.toolset_id)
+                        return (
+                          <label key={t.toolset_id} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => setSelectedToolsetIds(prev =>
+                                checked ? prev.filter(x => x !== t.toolset_id) : [...prev, t.toolset_id]
+                              )}
+                              className="accent-[#111827]"
+                            />
+                            <span className="text-[11px] text-[#374151]">{t.toolset_id}</span>
+                            <span className="ml-auto text-[10px] text-[#9CA3AF]">{(t.tools ?? []).filter(x => x.selected).length} tools</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {/* workflow sources */}
+                  <div>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Workflow Sources</p>
+                    <div className="max-h-32 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-2 space-y-1">
+                      {sources.length === 0 && <span className="text-[11px] text-[#9CA3AF]">No sources</span>}
+                      {sources.map(s => {
+                        const checked = selectedSourceIds.includes(s.id)
+                        return (
+                          <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => setSelectedSourceIds(prev =>
+                                checked ? prev.filter(x => x !== s.id) : [...prev, s.id]
+                              )}
+                              className="accent-[#111827]"
+                            />
+                            <span className="text-[11px] text-[#374151]">{s.id}</span>
+                            <span className="ml-auto text-[10px] text-[#9CA3AF]">{s.workflow_count ?? s.total_tools} wf</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {/* token budget bar */}
+                {(selectedToolsetIds.length > 0 || selectedSourceIds.length > 0) && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-[#6B7280]">Est. token cost</span>
+                      <span className={`font-mono text-[10px] font-bold ${
+                        combinedTokenEst > TOKEN_BUDGET ? "text-red-600" : combinedTokenEst > TOKEN_BUDGET * 0.8 ? "text-amber-600" : "text-emerald-600"
+                      }`}>{combinedTokenEst.toLocaleString()} / {TOKEN_BUDGET.toLocaleString()}</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F3F4F6]">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          combinedTokenEst > TOKEN_BUDGET ? "bg-red-500" : combinedTokenEst > TOKEN_BUDGET * 0.8 ? "bg-amber-400" : "bg-emerald-500"
+                        }`}
+                        style={{ width: `${Math.min(100, (combinedTokenEst / TOKEN_BUDGET) * 100)}%` }}
+                      />
+                    </div>
+                    {combinedTokenEst > TOKEN_BUDGET && (
+                      <p className="mt-1 text-[10px] text-amber-600">⚠ Over budget — backend will trim to fit {TOKEN_BUDGET.toLocaleString()} tokens.</p>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* source (agent + workflow source) */}
@@ -641,13 +777,15 @@ export function AgentPlayground({ tools = [] }) {
       </div>
 
       {/* RIGHT: live execution trace */}
-      <aside className="flex min-h-0 flex-col bg-white">
+      <aside className="flex min-h-0 flex-col overflow-hidden bg-white">
         <div className="border-b border-[#E5E7EB] px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-[#111827]">Live Execution Trace</h3>
               <p className="mt-1 text-xs text-[#6B7280]">
-                {isWorkflowMode
+                {toolSource === "combined"
+                  ? `${selectedToolsetIds.length} toolset(s) + ${selectedSourceIds.length} source(s) · ≤${TOKEN_BUDGET.toLocaleString()} tokens`
+                  : isWorkflowMode
                   ? isAuto
                     ? "Tools auto-assigned per task (token-minimizing)"
                     : isAllApis
@@ -664,9 +802,65 @@ export function AgentPlayground({ tools = [] }) {
           <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-[#111827]">
               <Bot className="size-4" />
-              {isWorkflowMode ? "Active Workflow Tools" : "Active Toolset"}
+              {isWorkflowMode ? "Active Workflow Tools" : toolSource === "combined" ? "Combined Tool Surface" : "Active Toolset"}
             </div>
-            {isWorkflowMode && isAuto ? (
+            {toolSource === "combined" && mode === "agent" ? (
+              <>
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-2xl font-bold text-emerald-700">≤{TOKEN_BUDGET.toLocaleString()}</span>
+                    <span className="text-[11px] text-[#6B7280]">token budget</span>
+                  </div>
+                  <p className="mt-1 text-[10px] leading-3 text-[#9CA3AF]">
+                    Mix any toolsets + workflow sources. Backend fits as many tools as possible within the budget, workflows-first (deferred = cheapest).
+                  </p>
+                </div>
+                {(selectedToolsetIds.length > 0 || selectedSourceIds.length > 0) ? (
+                  <>
+                    {selectedSourceIds.length > 0 && (
+                      <>
+                        <p className="mt-3 text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Workflow sources</p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {selectedSourceIds.map(sid => (
+                            <span key={sid} className="workspace-pill border-indigo-200 bg-indigo-50 font-mono text-indigo-700">{sid}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {selectedToolsetIds.length > 0 && (
+                      <>
+                        <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Toolsets</p>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {selectedToolsetIds.map(tsid => (
+                            <span key={tsid} className="workspace-pill border-amber-200 bg-amber-50 font-mono text-amber-800">{tsid}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {combinedTokenEst > 0 && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] text-[#6B7280]">Est. tokens</span>
+                          <span className={`font-mono text-[10px] font-bold ${
+                            combinedTokenEst > TOKEN_BUDGET ? "text-red-600" : "text-emerald-600"
+                          }`}>{combinedTokenEst.toLocaleString()} / {TOKEN_BUDGET.toLocaleString()}</span>
+                        </div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F3F4F6]">
+                          <div
+                            className={`h-full rounded-full ${
+                              combinedTokenEst > TOKEN_BUDGET ? "bg-red-500" : "bg-emerald-500"
+                            }`}
+                            style={{ width: `${Math.min(100, (combinedTokenEst / TOKEN_BUDGET) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-3 text-[11px] text-[#9CA3AF]">No toolsets or sources selected yet.</p>
+                )}
+              </>
+            ) : isWorkflowMode && isAuto ? (
               <>
                 {routed ? (
                   <>

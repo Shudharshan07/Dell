@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Boxes, Coins, Play, ChevronDown, ChevronRight, Loader2, Zap, GitBranch, Search, Sparkles, Workflow } from "lucide-react"
+import { Boxes, Coins, Play, ChevronDown, ChevronRight, Loader2, Zap, GitBranch, Search, Sparkles, Workflow, Check, X, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 function MetricCard({ icon: Icon, label, from, to, pct, note }) {
@@ -21,6 +21,56 @@ function MetricCard({ icon: Icon, label, from, to, pct, note }) {
   )
 }
 
+function PendingCard({ item, onApprove, onReject }) {
+  const [steps, setSteps] = useState(JSON.stringify(item.steps, null, 2))
+  const [stepsErr, setStepsErr] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  const handleApprove = async () => {
+    let parsed
+    try { parsed = JSON.parse(steps) } catch { setStepsErr("Invalid JSON"); return }
+    setStepsErr(null)
+    setBusy(true)
+    await onApprove(item, parsed)
+    setBusy(false)
+  }
+
+  return (
+    <div className="rounded-lg border border-amber-200 bg-white p-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs font-semibold text-[#111827]">{item.name}</span>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">agent-proposed</span>
+            <span className="text-[10px] text-[#9CA3AF]">{item.source_id} / {item.workflow_id}</span>
+          </div>
+          <p className="mt-0.5 text-[11px] text-[#6B7280]">{item.description}</p>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <button onClick={handleApprove} disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700">
+            {busy ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />} Approve
+          </button>
+          <button onClick={() => onReject(item.id)}
+            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50">
+            <X className="size-3" /> Reject
+          </button>
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-[10px] font-semibold text-[#9CA3AF]">Steps (editable JSON)</p>
+        <textarea
+          rows={Math.min(8, item.steps.length * 2 + 2)}
+          value={steps}
+          onChange={e => { setSteps(e.target.value); setStepsErr(null) }}
+          className="w-full rounded border border-[#E5E7EB] bg-[#FAFAFA] px-2 py-1.5 font-mono text-[10px] outline-none focus:border-[#111827]"
+        />
+        {stepsErr && <p className="text-[10px] text-red-600">{stepsErr}</p>}
+      </div>
+    </div>
+  )
+}
+
 export function WorkflowView() {
   const [sources, setSources] = useState({})
   const [sourceId, setSourceId] = useState("")
@@ -35,6 +85,9 @@ export function WorkflowView() {
   const [discovering, setDiscovering] = useState(false)
   const [discovery, setDiscovery] = useState(null)
   const [plansByWf, setPlansByWf] = useState({})
+  const [pending, setPending] = useState([])
+  const [runParamsOpen, setRunParamsOpen] = useState(null)
+  const [runParams, setRunParams] = useState({})
 
   useEffect(() => {
     fetch("/api/v1/sources")
@@ -46,6 +99,9 @@ export function WorkflowView() {
       })
       .catch(() => setSources({}))
   }, [])
+
+  const loadPending = () =>
+    fetch("/api/v1/workflows/pending").then(r => r.json()).then(d => setPending(d.pending ?? [])).catch(() => {})
 
   const loadPlans = (sid) => {
     if (!sid) return
@@ -70,6 +126,7 @@ export function WorkflowView() {
       .then(setData)
       .catch(() => setData(null))
     loadPlans(sourceId)
+    loadPending()
   }, [sourceId])
 
   // Feature 1: one-click "Generate Dynamic Workflows" — cluster + synthesize
@@ -108,18 +165,41 @@ export function WorkflowView() {
     }
   }
 
-  const run = async (workflow_id, operation) => {
+  const run = async (workflow_id, operation, extraParams = {}) => {
     setResult({ loading: true })
+    setRunParamsOpen(null)
     try {
+      let body = {}
+      if (extraParams.bodyText) try { body = JSON.parse(extraParams.bodyText) } catch { body = {} }
       const r = await fetch("/api/v1/workflows/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source_id: sourceId, workflow_id, operation, report_limit: 3 }),
+        body: JSON.stringify({
+          source_id: sourceId, workflow_id, operation,
+          path_params: extraParams.path ?? {},
+          query_params: extraParams.query ?? {},
+          body,
+          report_limit: 3,
+        }),
       })
       setResult(await r.json())
     } catch (e) {
       setResult({ error: e.message })
     }
+  }
+
+  const approvePending = async (item, editedSteps) => {
+    await fetch(`/api/v1/workflows/pending/${item.id}/approve`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: item.name, description: item.description, steps: editedSteps }),
+    })
+    loadPending()
+    if (sourceId) loadPlans(sourceId)
+  }
+
+  const rejectPending = async (id) => {
+    await fetch(`/api/v1/workflows/pending/${id}/reject`, { method: "POST" })
+    loadPending()
   }
 
   // Task D: design-time AI discovery (Groq). Refreshes the workflow list so the
@@ -336,6 +416,18 @@ export function WorkflowView() {
           </div>
         )}
 
+        {/* Pending approvals — agent-proposed workflows awaiting human review */}
+        {pending.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Clock className="size-4 text-amber-600" />
+              <span className="text-xs font-bold text-amber-800">Pending Approvals ({pending.length})</span>
+              <span className="text-[11px] text-amber-600">Agent-proposed workflows — review, edit, then approve or reject</span>
+            </div>
+            {pending.map(item => <PendingCard key={item.id} item={item} onApprove={approvePending} onReject={rejectPending} />)}
+          </div>
+        )}
+
         {/* workflow list */}
         {workflows.length > 0 ? (
           <div className="space-y-2">
@@ -403,20 +495,76 @@ export function WorkflowView() {
                           </button>
                         </div>
                       )}
-                      {w.operations.map((o) => (
-                        <div key={o.operation_id} className="flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 hover:bg-[#FAFAFA]">
-                          <div className="flex min-w-0 items-center gap-2 font-mono text-[11px]">
-                            <span className="w-12 shrink-0 font-bold text-emerald-600">{o.method}</span>
-                            <span className="truncate text-[#55534E]">{o.path}</span>
-                            {o.params.length > 0 && <span className="shrink-0 text-[10px] text-[#9CA3AF]">({o.params.join(", ")})</span>}
+                      {w.operations.map((o) => {
+                        const key = `${w.id}:${o.operation_id}`
+                        const open = runParamsOpen === key
+                        const p = runParams[key] ?? {}
+                        const pathPlaceholders = [...(o.path?.matchAll(/\{([^}]+)\}/g) ?? [])].map(m => m[1])
+                        const queryParams = (o.params ?? []).filter(pp => !pathPlaceholders.includes(pp))
+                        const needsBody = ["POST","PUT","PATCH"].includes(o.method)
+                        const setP = (patch) => setRunParams(prev => ({ ...prev, [key]: { ...(prev[key] ?? {}), ...patch } }))
+                        return (
+                          <div key={o.operation_id} className="rounded-lg hover:bg-[#FAFAFA]">
+                            <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+                              <div className="flex min-w-0 items-center gap-2 font-mono text-[11px]">
+                                <span className="w-12 shrink-0 font-bold text-emerald-600">{o.method}</span>
+                                <span className="truncate text-[#55534E]">{o.path}</span>
+                                {o.params.length > 0 && <span className="shrink-0 text-[10px] text-[#9CA3AF]">({o.params.join(", ")})</span>}
+                              </div>
+                              <button
+                                onClick={() => setRunParamsOpen(open ? null : key)}
+                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#E5E7EB] bg-white px-2 py-1 text-[10px] font-semibold text-[#374151] hover:bg-[#F3F4F6]"
+                              >
+                                <Play className="size-3" /> Run
+                              </button>
+                            </div>
+                            {open && (
+                              <div className="mx-3 mb-2 space-y-2 rounded-lg border border-[#E5E7EB] bg-white p-3">
+                                {pathPlaceholders.map(ph => (
+                                  <div key={ph} className="flex items-center gap-2">
+                                    <span className="w-28 shrink-0 font-mono text-[10px] text-[#9CA3AF]">{ph} (path)</span>
+                                    <input
+                                      value={p.path?.[ph] ?? ""}
+                                      onChange={e => setP({ path: { ...(p.path ?? {}), [ph]: e.target.value } })}
+                                      placeholder={ph}
+                                      className="flex-1 rounded border border-[#E5E7EB] px-2 py-1 font-mono text-[11px] outline-none focus:border-[#111827]"
+                                    />
+                                  </div>
+                                ))}
+                                {queryParams.map(qp => (
+                                  <div key={qp} className="flex items-center gap-2">
+                                    <span className="w-28 shrink-0 font-mono text-[10px] text-[#9CA3AF]">{qp} (query)</span>
+                                    <input
+                                      value={p.query?.[qp] ?? ""}
+                                      onChange={e => setP({ query: { ...(p.query ?? {}), [qp]: e.target.value } })}
+                                      placeholder={qp}
+                                      className="flex-1 rounded border border-[#E5E7EB] px-2 py-1 font-mono text-[11px] outline-none focus:border-[#111827]"
+                                    />
+                                  </div>
+                                ))}
+                                {needsBody && (
+                                  <div className="flex items-start gap-2">
+                                    <span className="w-28 shrink-0 pt-1 font-mono text-[10px] text-[#9CA3AF]">body (JSON)</span>
+                                    <textarea
+                                      rows={3}
+                                      value={p.bodyText ?? ""}
+                                      onChange={e => setP({ bodyText: e.target.value })}
+                                      placeholder='{"key": "value"}'
+                                      className="flex-1 rounded border border-[#E5E7EB] px-2 py-1 font-mono text-[11px] outline-none focus:border-[#111827]"
+                                    />
+                                  </div>
+                                )}
+                                <button
+                                  onClick={() => run(w.id, o.operation_id, p)}
+                                  className="inline-flex items-center gap-1 rounded-md bg-[#111827] px-3 py-1 text-[11px] font-semibold text-white hover:bg-black"
+                                >
+                                  <Play className="size-3" /> Execute
+                                </button>
+                              </div>
+                            )}
                           </div>
-                          {o.params.length === 0 && o.method === "GET" && (
-                            <button onClick={() => run(w.id, o.operation_id)} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#E5E7EB] bg-white px-2 py-1 text-[10px] font-semibold text-[#374151] hover:bg-[#F3F4F6]">
-                              <Play className="size-3" /> Run
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>

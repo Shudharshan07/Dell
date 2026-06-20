@@ -310,8 +310,66 @@ def generate_sdk(toolset_id: str, lang: str = "python"):
 
 
 # ===========================================================================
-# Source-scoped Environments (the REAL proxy-override functionality)
+# Pending Workflows — agent-proposed workflows awaiting human approval
 # ===========================================================================
+from pydantic import BaseModel as _BaseModel
+
+
+class PendingWorkflowApproval(_BaseModel):
+    name: str
+    description: str = ""
+    steps: list[dict]  # operator may have edited these
+
+
+@router.get("/workflows/pending")
+def list_pending_workflows():
+    """List all agent-proposed workflows awaiting human approval."""
+    storage = load_storage()
+    return {"pending": [p for p in (storage.get("pending_workflows") or []) if p.get("status") == "pending"]}
+
+
+@router.post("/workflows/pending/{pending_id}/approve")
+async def approve_pending_workflow(pending_id: str, req: PendingWorkflowApproval):
+    """Approve (and optionally edit) a pending workflow — saves it as a named plan."""
+    from app.workflows import execute_plan  # noqa: F401 — validates import
+    storage = load_storage()
+    pending = storage.get("pending_workflows") or []
+    item = next((p for p in pending if p["id"] == pending_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Pending workflow '{pending_id}' not found.")
+
+    # Save as a named plan under the owning workflow
+    source_id = item["source_id"]
+    workflow_id = item["workflow_id"]
+    name = req.name or item["name"]
+    steps = req.steps if req.steps is not None else item["steps"]
+
+    plans = storage.setdefault("workflow_plans", {})
+    plans.setdefault(source_id, {}).setdefault(workflow_id, {})[name] = steps
+
+    # mark approved
+    item["status"] = "approved"
+    item["approved_name"] = name
+    item["approved_steps"] = steps
+    save_storage(storage)
+    return {"status": "approved", "source_id": source_id, "workflow_id": workflow_id,
+            "name": name, "steps": len(steps)}
+
+
+@router.post("/workflows/pending/{pending_id}/reject")
+def reject_pending_workflow(pending_id: str):
+    """Reject a pending workflow — removes it from the approval queue."""
+    storage = load_storage()
+    pending = storage.get("pending_workflows") or []
+    item = next((p for p in pending if p["id"] == pending_id), None)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Pending workflow '{pending_id}' not found.")
+    item["status"] = "rejected"
+    save_storage(storage)
+    return {"status": "rejected", "id": pending_id}
+
+
+
 # Stored under storage["source_environments"][source_id] =
 #   {"active": <env_id|None>, "envs": [{"id","name","variables":{...}}, ...]}
 # proxy.py:_active_env_vars reads this to override base_url + inject auth.

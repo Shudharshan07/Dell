@@ -192,15 +192,54 @@ def make_workflow_tool(sid: str, wf_id: str):
     return workflow_tool
 
 
+@mcp.tool()
+async def propose_workflow(
+    source_id: str,
+    name: str,
+    description: str,
+    workflow_id: str,
+    steps: list[dict],
+) -> str:
+    """Propose a new multi-step workflow for human review and approval.
+
+    The workflow will appear in the Workflow Proxy UI under 'Pending Approvals'
+    where a human operator can inspect, edit, and approve or reject it before
+    it becomes a runnable named plan. DO NOT execute any steps directly —
+    submit them here and wait for approval.
+
+    Args:
+        source_id: The ingested API source this workflow targets.
+        name: snake_case name for the workflow (e.g. 'fetch_server_health').
+        description: One-line description of what this workflow accomplishes.
+        workflow_id: The owning wf_* cluster id to attach this plan to.
+        steps: Ordered list of steps, each {operation_id, path_params?, query_params?, body?}.
+    """
+    from app.storage import save_storage
+    storage = load_storage()
+    pending = storage.setdefault("pending_workflows", [])
+    import re, time
+    slug = re.sub(r"[^a-z0-9_]", "_", (name or "workflow").lower()).strip("_") or "workflow"
+    pending.append({
+        "id": f"{slug}_{int(time.time())}",
+        "name": slug,
+        "description": description or "",
+        "source_id": source_id,
+        "workflow_id": workflow_id,
+        "steps": steps or [],
+        "proposed_at": int(time.time()),
+        "status": "pending",
+    })
+    save_storage(storage)
+    return f"✅ Workflow '{slug}' submitted for human review. It will appear in the Workflow Proxy UI under 'Pending Approvals'. Do not execute until approved."
+
+
 try:
     storage = load_storage()
     registered = 0
     for source_id, source_data in storage.get("sources", {}).items():
         workflows = (storage.get("workflow_defs") or {}).get(source_id) or cluster_source(source_data)
         for wf in workflows:
-            # Enhancement 1: register with deferred (catalog-free) descriptions.
             schema = workflow_tool_schema(wf, defer_catalog=True)
-            # unique, MCP-safe tool name across sources
             clean_name = re.sub(r"[^a-zA-Z0-9_-]", "_", f"{source_id}_{wf['id']}")[:64]
             mcp.tool(name=clean_name, description=schema["description"])(
                 make_workflow_tool(source_id, wf["id"])

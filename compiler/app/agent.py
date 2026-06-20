@@ -71,12 +71,12 @@ OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434").rs
 
 CLAUDE_MODELS = ["claude-sonnet-4-6", "claude-opus-4-8", "claude-haiku-4-5"]
 GROQ_DEFAULT_MODELS = [
-    "openai/gpt-oss-120b",
-    "openai/gpt-oss-20b",
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
 ]
-GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b"
+GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
 SYSTEM_PROMPT = (
     "You are an API toolset tester. The user gives you a request; you have a set of "
@@ -88,7 +88,7 @@ SYSTEM_PROMPT = (
 MAX_TURNS = 8
 # Tool results are fed back to the model AND re-sent on every subsequent turn,
 # so oversized results compound token cost fast. Keep enough to answer, no more.
-MAX_TOOL_RESULT_CHARS = 2500
+MAX_TOOL_RESULT_CHARS = 1000
 
 
 # ---------------------------------------------------------------------------
@@ -214,6 +214,38 @@ def build_catalog(toolset: dict) -> tuple[list[dict], dict]:
         }
 
     return tool_defs, registry
+
+
+def _tool_defs_tokens(tool_defs: list[dict]) -> int:
+    return max(1, (len(json.dumps(tool_defs, separators=(",", ":"))) + 3) // 4)
+
+
+def build_source_catalog(source_id: str) -> tuple[list[dict], dict]:
+    """Build a raw one-tool-per-operation catalog for a single source.
+
+    This is intentionally kept for small APIs where workflow/meta tooling costs
+    more tokens than the original compact raw surface.
+    """
+    storage = load_storage()
+    src = (storage.get("sources") or {}).get(source_id)
+    if not src:
+        raise HTTPException(status_code=404, detail=f"Source '{source_id}' not found.")
+    toolset = {
+        "toolset_id": f"source:{source_id}",
+        "tools": [
+            {
+                "id": op_id,
+                "source_id": source_id,
+                "method": tool.get("method", "GET"),
+                "path": tool.get("path", "/"),
+                "description": tool.get("description") or tool.get("summary") or "",
+                "parameters": tool.get("parameters") or [],
+                "selected": True,
+            }
+            for op_id, tool in (src.get("tools") or {}).items()
+        ],
+    }
+    return build_catalog(toolset)
 
 
 def _to_proxy_request(name: str, args: dict, registry: dict) -> ProxyCallRequest:
@@ -494,6 +526,94 @@ GLOBAL_WORKFLOW_AUTO_SYSTEM_PROMPT = (
 )
 
 
+def build_combined_catalog(
+    toolset_ids: list[str],
+    source_ids: list[str],
+    token_budget: int = 4000,
+) -> tuple[list[dict], dict, str]:
+    """Merge tool defs from multiple toolsets (raw) + multiple workflow sources
+    (deferred wf_* + meta tools), budget-capped at ``token_budget`` tokens.
+
+    Returns (tool_defs, registry, system_prompt). Tools are added in order:
+    workflow sources first (cheapest tokens), then toolset raw tools. Any tool
+    that would push the running token count past the budget is skipped.
+    registry maps name -> handler kind so _execute_combined_tool can dispatch.
+    """
+    storage = load_storage()
+    tool_defs: list[dict] = []
+    registry: dict[str, dict] = {}
+    taken: set[str] = set()
+    used_tokens = 0
+
+    def _fits(d: dict) -> bool:
+        nonlocal used_tokens
+        t = _tool_defs_tokens([d])
+        if used_tokens + t > token_budget:
+            return False
+        used_tokens += t
+        return True
+
+    # 1. Workflow sources — deferred schemas are tiny (O(1) per workflow)
+    for sid in source_ids:
+        src = (storage.get("sources") or {}).get(sid)
+        if not src:
+            continue
+        workflows = (storage.get("workflow_defs") or {}).get(sid) or cluster_source(src)
+        for wf in workflows:
+            schema = workflow_tool_schema(wf, defer_catalog=True)
+            name = namespaced_tool_name(sid, wf["id"], taken)
+            schema = {**schema, "name": name}
+            if _fits(schema):
+                tool_defs.append(schema)
+                registry[name] = {"kind": "workflow", "source_id": sid, "workflow_id": wf["id"]}
+
+    # 2. Add global meta tools once (if any workflow source was included)
+    if any(v["kind"] == "workflow" for v in registry.values()):
+        for meta in (GLOBAL_SEARCH_OPERATIONS_DEF, GLOBAL_DESCRIBE_OPERATION_DEF):
+            if meta["name"] not in registry and _fits(meta):
+                tool_defs.append(meta)
+                registry[meta["name"]] = {"kind": "meta_global"}
+
+    # 3. Toolset raw tools — only add what fits within remaining budget
+    for tsid in toolset_ids:
+        toolset = (storage.get("toolsets") or {}).get(tsid)
+        if not toolset:
+            continue
+        defs, reg = build_catalog(toolset)
+        for d in defs:
+            if d["name"] not in registry and _fits(d):
+                tool_defs.append(d)
+                registry[d["name"]] = {**reg[d["name"]], "kind": "raw"}
+
+    parts = []
+    if any(v["kind"] == "workflow" for v in registry.values()):
+        parts.append(
+            "Workflow tools (namespaced '<source>__<workflow>') use progressive disclosure — "
+            "call search_operations(query) to find an operation, describe_operation(operation_id) "
+            "for its schema, then call the tool with operation_id as 'operation'."
+        )
+    if any(v["kind"] == "raw" for v in registry.values()):
+        parts.append("Raw toolset tools map 1:1 to API endpoints — call them directly.")
+    system_prompt = (
+        "You are an API agent with a mixed tool surface (workflow + raw endpoint tools). "
+        + " ".join(parts)
+        + " After results return, answer the user concisely from the real data."
+    )
+    return tool_defs, registry, system_prompt
+
+
+async def _execute_combined_tool(name: str, args: dict, registry: dict) -> tuple[bool, Any]:
+    """Dispatcher for combined mode: delegates to workflow or raw executor by kind."""
+    meta = registry.get(name)
+    if not meta:
+        return False, {"error": f"Unknown tool '{name}'."}
+    kind = meta.get("kind")
+    if kind in ("workflow", "meta", "meta_global", "executor_global"):
+        return await _execute_workflow_tool(name, args, registry)
+    # raw toolset tool
+    return await _execute_tool(name, args, registry)
+
+
 def build_workflow_catalog_auto(message: str, k: int = 3) -> tuple[list[dict], dict, dict]:
     """Returns (tool_defs, registry, route) for AUTO (task-routed) workflow mode.
 
@@ -756,11 +876,21 @@ async def _run_openai_compat(
             if tools:
                 payload["tools"] = tools
                 payload["tool_choice"] = "auto"
-            resp = await client.post(
-                f"{base_url}/chat/completions", headers=headers, json=payload
-            )
-            # Bounded backoff on provider rate limits (e.g. Groq free-tier TPM).
-            # Additive: retries the SAME request; trace/usage shapes are unchanged.
+            try:
+                resp = await client.post(
+                    f"{base_url}/chat/completions", headers=headers, json=payload
+                )
+            except Exception as e:
+                msg = str(e)
+                if "getaddrinfo" in msg or "11001" in msg or "Name or service" in msg:
+                    yield {"type": "error", "message": (
+                        f"Cannot reach {base_url} — DNS resolution failed. "
+                        f"Check your internet connection and that the API key is set in compiler/.env."
+                    )}
+                else:
+                    yield {"type": "error", "message": f"HTTP client error: {msg}"}
+                return
+            # Bounded backoff on provider rate limits
             rl_retries = 0
             while resp.status_code == 429 and rl_retries < 3:
                 wait_s = _parse_retry_after(resp)
@@ -768,11 +898,24 @@ async def _run_openai_compat(
                 import asyncio
                 await asyncio.sleep(min(wait_s, 60.0))
                 rl_retries += 1
-                resp = await client.post(
-                    f"{base_url}/chat/completions", headers=headers, json=payload
-                )
+                try:
+                    resp = await client.post(
+                        f"{base_url}/chat/completions", headers=headers, json=payload
+                    )
+                except Exception as e:
+                    yield {"type": "error", "message": f"HTTP client error on retry: {e}"}
+                    return
             if resp.status_code >= 400:
-                yield {"type": "error", "message": f"{base_url} {resp.status_code}: {resp.text[:400]}"}
+                err_text = resp.text[:600]
+                if resp.status_code == 401:
+                    err_text = "API key invalid or missing. Check your key in compiler/.env."
+                elif resp.status_code == 429:
+                    err_text = f"Rate limited. {err_text}"
+                elif resp.status_code == 400 and "tool_use_failed" in resp.text:
+                    err_text = ("Model failed to generate a valid tool call (tool_use_failed). "
+                                "This is a known issue with openai/gpt-oss-* models. "
+                                "Switch to llama-3.3-70b-versatile in the Model dropdown and retry.")
+                yield {"type": "error", "message": f"{base_url} HTTP {resp.status_code}: {err_text}"}
                 return
             data = resp.json()
             turn += 1
@@ -803,13 +946,21 @@ async def _run_openai_compat(
             for tc in tool_calls:
                 fn = tc.get("function", {})
                 name = fn.get("name", "")
-                # Groq gpt-oss (harmony format) sometimes leaks control tokens into
-                # the tool name, e.g. "search_operations<|channel|>commentary".
-                # Strip anything from the first non-tool-name character onward.
+                # gpt-oss leaks control tokens: "search_operations<|channel|>commentary"
+                # or the whole call as "<function=name>"
                 if name:
-                    name = re.split(r"[<|]", name, 1)[0].strip()
+                    _fn_match = re.match(r"<function=([^>]+)>", name)
+                    if _fn_match:
+                        name = _fn_match.group(1)
+                    else:
+                        name = re.split(r"[<|]", name, 1)[0].strip()
+                raw_args = fn.get("arguments") or "{}"
+                # gpt-oss sometimes embeds args as <function=name>{json} inside the arguments string
+                _xml_match = re.search(r"<function=[^>]+>({.*})", raw_args, re.DOTALL)
+                if _xml_match:
+                    raw_args = _xml_match.group(1)
                 try:
-                    args = json.loads(fn.get("arguments") or "{}")
+                    args = json.loads(raw_args)
                 except Exception:
                     args = {}
                 yield {"type": "tool_call", "name": name, "args": args}
@@ -921,8 +1072,13 @@ class AgentRunRequest(BaseModel):
     message: str
     # mode selects the tool surface: "toolset" (raw curated endpoints, default)
     # or "workflow" (compact deferred workflow-level tools + progressive disclosure).
+    # or "combined" (multi-select: multiple toolsets + multiple workflow sources, budget-capped)
     mode: str = "toolset"
     source_id: str = ""  # required when mode == "workflow"
+    # combined mode: multiple toolset ids + multiple workflow source ids
+    toolset_ids: list[str] = []
+    source_ids: list[str] = []
+    token_budget: int = 4000  # max tool-definition tokens for combined mode
     # history is accepted but the loop currently runs single-turn per request
     history: list[dict] = []
 
@@ -979,7 +1135,15 @@ async def run_agent(req: AgentRunRequest):
     routed_workflows: list[str] | None = None  # set in __auto__ mode for the start event
     route_info: dict | None = None
 
-    if mode == "workflow":
+    if mode == "combined":
+        tool_defs, registry, system_prompt = build_combined_catalog(
+            toolset_ids=req.toolset_ids,
+            source_ids=req.source_ids,
+            token_budget=req.token_budget,
+        )
+        tool_runner = _execute_combined_tool
+        surface = "combined"
+    elif mode == "workflow":
         # ── Feature 2: AUTO (task-routed) mode — source_id == "__auto__". Route on
         # the message FIRST, then send ONLY the top-K relevant workflow tools + the
         # 2 global meta tools. Minimal tokens + sharper tool selection. ──
@@ -1089,7 +1253,11 @@ async def run_agent(req: AgentRunRequest):
             async for event in gen:
                 yield _sse(event)
         except Exception as e:  # noqa: BLE001
-            yield _sse({"type": "error", "message": str(e)})
+            msg = str(e)
+            if "getaddrinfo" in msg or "Name or service" in msg or "11001" in msg:
+                msg = (f"Cannot reach provider '{provider}' — DNS resolution failed. "
+                       f"Check your internet connection or API key in compiler/.env. ({msg})")
+            yield _sse({"type": "error", "message": msg})
 
     return StreamingResponse(
         event_stream(),

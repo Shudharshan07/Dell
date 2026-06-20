@@ -836,6 +836,59 @@ MAX_FOREACH_ITERATIONS = 25
 MAX_POLL_ATTEMPTS = 30
 
 
+def _source_tool(source_id: str, operation_id: str) -> dict:
+    storage = load_storage()
+    src = (storage.get("sources") or {}).get(source_id)
+    if not src:
+        raise HTTPException(status_code=404, detail=f"Source '{source_id}' not found.")
+    tool = (src.get("tools") or {}).get(operation_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Operation '{operation_id}' not found.")
+    return tool
+
+
+def _path_param_names(tool: dict) -> list[str]:
+    path_names = re.findall(r"\{([^}]+)\}", tool.get("path") or "")
+    declared = [
+        p.get("name")
+        for p in (tool.get("parameters") or [])
+        if isinstance(p, dict) and p.get("in") == "path" and p.get("name")
+    ]
+    out: list[str] = []
+    for name in declared + path_names:
+        if name and name not in out:
+            out.append(name)
+    return out
+
+
+def _required_body(tool: dict) -> bool:
+    body = tool.get("request_body") or {}
+    if isinstance(body, dict) and body.get("required"):
+        return True
+    return any(
+        isinstance(p, dict) and p.get("in") == "body" and p.get("required")
+        for p in (tool.get("parameters") or [])
+    )
+
+
+def _validate_step_inputs(source_id: str, operation_id: str, path_params: dict, body: dict) -> None:
+    tool = _source_tool(source_id, operation_id)
+    missing_path = [name for name in _path_param_names(tool) if path_params.get(name) in (None, "")]
+    if missing_path:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Step operation '{operation_id}' missing path_params: "
+                f"{', '.join(missing_path)}"
+            ),
+        )
+    if _required_body(tool) and not body:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Step operation '{operation_id}' requires a request body.",
+        )
+
+
 def _dotted_get(obj: Any, path: str) -> Any:
     """Walk a dotted path into nested JSON. '*' maps over the current list."""
     if path == "":
@@ -927,6 +980,7 @@ async def _run_plan_step(source_id: str, step: dict, ctx: dict) -> dict:
     pp = _resolve_mapping(step.get("path_params"), ctx)
     qp = _resolve_mapping(step.get("query_params"), ctx)
     body = _resolve_mapping(step.get("body"), ctx)
+    _validate_step_inputs(step_source, op_id, pp, body)
     result = await proxy_call(ProxyCallRequest(
         source_id=step_source, operation_id=op_id,
         path_params=pp, query_params=qp, body=body))
@@ -990,6 +1044,8 @@ async def execute_plan(source_id: str, plan: list[dict], limit: int = 5) -> dict
                 except HTTPException as e:
                     r = {"error": e.detail, "status_code": e.status_code}
                 iter_results.append({"item": el, "result": r})
+                if isinstance(r, dict) and r.get("error") and not step.get("continue_on_error"):
+                    break
             step_results.append({"foreach": True, "items": iter_results})
             steps_trace.append({
                 "step": i, "source_id": step_source,
@@ -1010,8 +1066,10 @@ async def execute_plan(source_id: str, plan: list[dict], limit: int = 5) -> dict
                 "status_code": r.get("status_code") if isinstance(r, dict) else None,
                 "polled": isinstance(r, dict) and "poll_attempts" in r,
             })
+            if isinstance(r, dict) and r.get("error") and not step.get("continue_on_error"):
+                break
 
-    return {"steps_executed": len(plan), "steps": step_results, "trace": steps_trace}
+    return {"steps_executed": len(step_results), "steps": step_results, "trace": steps_trace}
 
 
 def _auto_report_plan(wf: dict, limit: int = 5) -> list[dict]:

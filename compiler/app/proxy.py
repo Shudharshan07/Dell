@@ -3,10 +3,12 @@ Dynamic API proxy layer.
 Forwards tool execution requests to downstream APIs using locally stored credentials.
 """
 import json
+import re
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Any
+from urllib.parse import urljoin
 from app.storage import load_storage
 
 router = APIRouter(prefix="/api/v1/proxy")
@@ -75,12 +77,32 @@ async def proxy_call(req: ProxyCallRequest):
         if env_base:
             base_url = env_base
 
+    if not base_url or not base_url.startswith(("http://", "https://")):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Source '{req.source_id}' has invalid base_url {base_url!r}. "
+                "Set a full http:// or https:// BASE_URL in the source environment, "
+                "or re-ingest the OpenAPI spec with a valid servers[0].url."
+            ),
+        )
+
     # Resolve path parameters
     path = tool["path"]
     for key, value in req.path_params.items():
         path = path.replace(f"{{{key}}}", str(value))
 
-    url = base_url + path
+    unresolved = re.findall(r"\{([^}]+)\}", path)
+    if unresolved:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Missing path_params for operation '{req.operation_id}': "
+                f"{', '.join(unresolved)}"
+            ),
+        )
+
+    url = urljoin(base_url + "/", path.lstrip("/"))
     method = tool["method"].lower()
 
     headers = {}

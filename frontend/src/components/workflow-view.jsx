@@ -152,16 +152,18 @@ export function WorkflowView() {
     <div className="h-full overflow-y-auto bg-[#FAFAFA]">
       <div className="mx-auto max-w-5xl space-y-5 p-6">
         {/* header */}
-        <div className="flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-white p-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+        {/* header */}
+        <div className="flex flex-col gap-4 rounded-xl border border-[#E5E7EB] bg-white p-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-1">
             <h2 className="flex items-center gap-2 text-base font-bold text-[#111827]">
               <GitBranch className="size-5" /> Workflow Proxy
             </h2>
-            <p className="mt-1 max-w-xl text-xs text-[#6B7280]">
+            <p className="max-w-xl text-xs text-[#6B7280]">
               Cluster a spec's raw endpoints into a handful of coarse, workflow-level MCP tools — collapsing hundreds of fine-grained tools (and tens of thousands of tokens) into something an agent can actually reason about.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          {/* Added flex-wrap here to prevent horizontal layout blowout */}
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={sourceId}
               onChange={(e) => setSourceId(e.target.value)}

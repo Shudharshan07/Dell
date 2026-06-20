@@ -261,9 +261,6 @@ export default function App() {
                 <Button variant="ghost" size="icon-sm" className="rounded-lg text-[#706F6B] hover:bg-[#EAE8E3] hover:text-[#111827]">
                   <Bell className="size-4" />
                 </Button>
-                <div className="flex size-8 items-center justify-center rounded-full bg-[#111827] text-xs font-semibold text-white">
-                  GR
-                </div>
               </header>
             )}
             <div className="flex-1 overflow-hidden bg-[#EDEDEB]">

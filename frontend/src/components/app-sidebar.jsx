@@ -96,16 +96,7 @@ export function AppSidebar({ activePage, onPageChange }) {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-[#D0CECA] bg-[#E3E1DC]">
-        <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-[#D4D2CD] cursor-pointer transition-all duration-150 group">
-          <div className="size-8 rounded-lg bg-gradient-to-tr from-purple-500 via-pink-500 to-orange-400 shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105" />
-          <div className="flex-1 min-w-0 leading-tight">
-            <p className="text-xs font-semibold text-[#111827] truncate">georges</p>
-            <p className="text-[10px] text-[#787670] truncate">speakeasy-team</p>
-          </div>
-          <ChevronsUpDown className="size-3.5 text-[#787670] shrink-0" />
-        </div>
-      </SidebarFooter>
+
     </Sidebar>
   )
 }

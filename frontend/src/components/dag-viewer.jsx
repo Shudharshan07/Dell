@@ -5,11 +5,11 @@ import { Search, X, ZoomIn, ZoomOut, Maximize2, RefreshCw, AlertCircle, Loader2,
 const API_BASE = ""
 
 const METHOD_COLORS = {
-  GET:    { bg: "#111827", text: "#ffffff", glow: "rgba(17,24,39,0.18)" },
-  POST:   { bg: "#374151", text: "#ffffff", glow: "rgba(55,65,81,0.18)" },
-  PUT:    { bg: "#6B7280", text: "#ffffff", glow: "rgba(107,114,128,0.18)" },
-  DELETE: { bg: "#9CA3AF", text: "#111827", glow: "rgba(156,163,175,0.2)" },
-  PATCH:  { bg: "#D1D5DB", text: "#111827", glow: "rgba(209,213,219,0.28)" },
+  GET:    { bg: "#16a34a", text: "#ffffff", glow: "rgba(22,163,74,0.35)" },
+  POST:   { bg: "#2563eb", text: "#ffffff", glow: "rgba(37,99,235,0.35)" },
+  PUT:    { bg: "#d97706", text: "#ffffff", glow: "rgba(217,119,6,0.35)" },
+  DELETE: { bg: "#dc2626", text: "#ffffff", glow: "rgba(220,38,38,0.35)" },
+  PATCH:  { bg: "#7c3aed", text: "#ffffff", glow: "rgba(124,58,237,0.35)" },
 }
 
 function methodColor(method) {

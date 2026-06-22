@@ -67,9 +67,9 @@ export function CustomToolsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-[#EDEDEB]">
+    <div className="h-full overflow-y-auto glass-content">
       <div className="mx-auto max-w-5xl space-y-4 p-6">
-        <div className="flex flex-col gap-3 rounded-xl border border-[#D1CFCA] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-white/30 glass-card p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Wrench className="size-5 text-[#111827]" />
             <div>
@@ -79,8 +79,8 @@ export function CustomToolsPage() {
           </div>
           <label className="flex items-center gap-2 text-xs">
             <span className="text-[#9CA3AF]">Source</span>
-            <select value={sourceId} onChange={(e) => setSourceId(e.target.value)}
-              className="rounded-lg border border-[#D1CFCA] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#111827]">
+              <select value={sourceId} onChange={(e) => setSourceId(e.target.value)}
+              className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]">
               {Object.keys(sources).length === 0 && <option value="">No sources</option>}
               {Object.keys(sources).map((id) => <option key={id} value={id}>{id}</option>)}
             </select>
@@ -98,16 +98,16 @@ export function CustomToolsPage() {
         )}
 
         {creating && (
-          <div className="grid grid-cols-1 gap-3 rounded-xl border border-[#D1CFCA] bg-white p-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 rounded-xl border border-white/30 glass-panel p-4 lg:grid-cols-2">
             <div className="space-y-3">
               <Input placeholder="Tool name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
               <Input placeholder="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
               <div>
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#787670]">Plan steps (in order)</p>
-                <div className="space-y-1 rounded-lg border border-[#D0CECA] bg-[#FAFAFA] p-2 min-h-16">
-                  {form.steps.length === 0 && <p className="px-1 py-2 text-xs text-[#787670]">Add operations from the right →</p>}
+                <div className="space-y-1 rounded-lg border border-white/20 bg-white/30 backdrop-blur-sm p-2 min-h-16">
+                  {form.steps.length === 0 && <p className="px-1 py-2 text-xs text-[#374151]">Add operations from the right →</p>}
                   {form.steps.map((s, i) => (
-                    <div key={`${s.operation_id}-${i}`} className="flex items-center gap-2 rounded bg-white px-2 py-1">
+                    <div key={`${s.operation_id}-${i}`} className="flex items-center gap-2 rounded bg-white/50 px-2 py-1">
                       <span className="text-[10px] font-bold text-[#9CA3AF]">{i + 1}</span>
                       <span className="font-mono text-[11px] text-emerald-600">{s.method}</span>
                       <span className="flex-1 truncate font-mono text-[11px] text-[#55534E]">{s.operation_id}</span>
@@ -123,14 +123,14 @@ export function CustomToolsPage() {
                 <Button size="sm" className="bg-[#111827] text-white hover:bg-black" disabled={!form.name.trim() || form.steps.length === 0} onClick={save}>Save</Button>
               </div>
             </div>
-            <div className="space-y-2 rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] p-3">
-              <div className="flex items-center gap-2 rounded-lg border border-[#D0CECA] bg-white px-2 py-1.5">
-                <Search className="size-3.5 text-[#9CA3AF]" />
-                <input placeholder="Filter operations…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 bg-transparent text-xs outline-none" />
+            <div className="space-y-2 rounded-lg border border-white/20 bg-white/30 backdrop-blur-sm p-3">
+              <div className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/50 px-2 py-1.5">
+                <Search className="size-3.5 text-[#374151]" />
+                <input placeholder="Filter operations…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 bg-transparent text-xs outline-none placeholder:text-[#6B7280]" />
               </div>
               <div className="max-h-80 space-y-1 overflow-y-auto">
                 {filteredOps.map((o) => (
-                  <button key={o.operation_id} onClick={() => addStep(o)} className="flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-white">
+                  <button key={o.operation_id} onClick={() => addStep(o)} className="flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-white/40">
                     <Plus className="size-3 text-[#9CA3AF]" />
                     <span className="font-mono text-[11px] text-emerald-600">{o.method}</span>
                     <span className="truncate font-mono text-[11px] text-[#55534E]">{o.path}</span>
@@ -143,9 +143,9 @@ export function CustomToolsPage() {
 
         <div className="space-y-3">
           {items.length === 0 && !creating ? (
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#D0CECA] py-10 text-center text-xs text-[#787670]"><Wrench className="size-5" /> No custom tools for this source yet.</div>
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-white/50 bg-white/20 backdrop-blur-xs py-10 text-center text-xs text-[#374151]"><Wrench className="size-5" /> No custom tools for this source yet.</div>
           ) : items.map((it) => (
-            <div key={it.id} className="rounded-xl border border-[#D1CFCA] bg-white p-4">
+            <div key={it.id} className="rounded-xl border border-white/30 glass-card p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h4 className="text-sm font-bold text-[#111827]">{it.name}</h4>
@@ -160,13 +160,13 @@ export function CustomToolsPage() {
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {(it.steps ?? []).map((s, i) => (
-                  <span key={i} className="rounded bg-[#EAE8E3] px-2 py-0.5 font-mono text-[10px] text-[#55534E]">{i + 1}. {typeof s === "string" ? s : s.operation_id}</span>
+                  <span key={i} className="rounded bg-white/40 border border-white/20 px-2 py-0.5 font-mono text-[10px] text-[#374151]">{i + 1}. {typeof s === "string" ? s : s.operation_id}</span>
                 ))}
               </div>
               {result?.tool_id === it.id && (
                 <div className="mt-3">
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#787670]">Run trace · {result.steps_executed} step(s)</p>
-                  <pre className="max-h-72 overflow-auto rounded-lg border border-[#D0CECA] bg-[#1E1E1E] p-3 font-mono text-[11px] text-emerald-300">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#374151]">Run trace · {result.steps_executed} step(s)</p>
+                  <pre className="max-h-72 overflow-auto rounded-lg border border-white/20 bg-black/60 backdrop-blur-md p-3 font-mono text-[11px] text-emerald-300">
                     {JSON.stringify(result.trace ?? result, null, 2)}
                   </pre>
                 </div>

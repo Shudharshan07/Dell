@@ -13,6 +13,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    port: parseInt(process.env.FRONTEND_PORT || "5173"),
+    proxy: {
+      "/api": `http://localhost:${process.env.API_PORT || "8000"}`,
+    },
+  },
   build: {
     outDir: "../compiler/static",
     emptyOutDir: true,

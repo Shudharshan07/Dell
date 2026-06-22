@@ -20,9 +20,9 @@ function methodColor(method) {
 function StatsBar({ summary }) {
   if (!summary) return null
   return (
-    <div className="flex flex-wrap gap-3 border-b border-[#E5E7EB] bg-white px-5 py-3 text-xs text-[#6B7280] select-none">
-      <span className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-2 py-1">Endpoints: <strong className="text-[#111827]">{summary.total_endpoints}</strong></span>
-      <span className="rounded-md border border-[#E5E7EB] bg-[#FAFAFA] px-2 py-1">Dependencies: <strong className="text-[#111827]">{summary.detected_dependencies}</strong></span>
+    <div className="flex flex-wrap gap-3 border-b border-white/20 glass-panel px-5 py-3 text-xs text-[#374151] select-none">
+      <span className="rounded-md border border-white/30 bg-white/40 px-2 py-1">Endpoints: <strong className="text-[#111827]">{summary.total_endpoints}</strong></span>
+      <span className="rounded-md border border-white/30 bg-white/40 px-2 py-1">Dependencies: <strong className="text-[#111827]">{summary.detected_dependencies}</strong></span>
       <span>Complexity:&nbsp;
         <strong className={
           summary.detected_dependencies > 80 ? "text-[#111827]"
@@ -61,7 +61,7 @@ function DetailPanel({ node, links, onClose }) {
   }
 
   return (
-    <div className="absolute right-4 top-4 z-20 w-80 rounded-xl border border-[#E5E7EB] bg-white/95 p-4 shadow-sm backdrop-blur-md">
+    <div className="absolute right-4 top-4 z-20 w-80 rounded-xl border border-white/40 glass-panel p-4 shadow-lg backdrop-blur-md">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide"
@@ -79,7 +79,7 @@ function DetailPanel({ node, links, onClose }) {
 
       <button
         onClick={copyForPlayground}
-        className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] py-2 text-[11px] font-semibold text-[#374151] transition hover:bg-[#F3F4F6] hover:text-[#111827]"
+        className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/40 bg-white/50 backdrop-blur-sm py-2 text-[11px] font-semibold text-[#374151] transition hover:bg-white/70 hover:text-[#111827]"
       >
         {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
         {copied ? "Copied for Playground" : "Copy for Playground"}
@@ -91,7 +91,7 @@ function DetailPanel({ node, links, onClose }) {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Incoming ({incoming.length})</p>
             <ul className="space-y-1">
               {incoming.slice(0, 5).map(s => (
-                <li key={s} className="text-[11px] font-mono text-[#374151] truncate bg-[#FAFAFA] border border-[#E5E7EB] rounded px-2 py-0.5">{s}</li>
+                <li key={s} className="text-[11px] font-mono text-[#374151] truncate bg-white/40 border border-white/20 rounded px-2 py-0.5">{s}</li>
               ))}
               {incoming.length > 5 && <li className="text-[11px] text-[#6B7280]">+{incoming.length - 5} more</li>}
             </ul>
@@ -102,7 +102,7 @@ function DetailPanel({ node, links, onClose }) {
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-1">Outgoing ({outgoing.length})</p>
             <ul className="space-y-1">
               {outgoing.slice(0, 5).map(t => (
-                <li key={t} className="text-[11px] font-mono text-[#374151] truncate bg-[#FAFAFA] border border-[#E5E7EB] rounded px-2 py-0.5">{t}</li>
+                <li key={t} className="text-[11px] font-mono text-[#374151] truncate bg-white/40 border border-white/20 rounded px-2 py-0.5">{t}</li>
               ))}
               {outgoing.length > 5 && <li className="text-[11px] text-[#6B7280]">+{outgoing.length - 5} more</li>}
             </ul>
@@ -316,7 +316,7 @@ function D3Graph({ nodes, links, filter, onNodeClick, selectedId }) {
           { icon: Maximize2, fn: () => resetFn.current?.(),   label: "Reset" },
         ].map(({ icon: Icon, fn, label }) => (
           <button key={label} onClick={fn} title={label}
-            className="flex size-8 items-center justify-center rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] shadow-sm transition-colors hover:bg-[#F3F4F6] hover:text-[#111827]">
+            className="flex size-8 items-center justify-center rounded-lg border border-white/30 glass-card text-[#374151] shadow-sm transition-colors hover:bg-white/60 hover:text-[#111827]">
             <Icon className="size-4" />
           </button>
         ))}
@@ -364,16 +364,16 @@ export function DagViewer() {
   }, [])
 
   return (
-    <div className="flex h-full flex-col bg-[#FAFAFA]">
+    <div className="flex h-full flex-col glass-content">
       {/* toolbar */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#E5E7EB] bg-white px-5 py-3">
+      <div className="flex flex-wrap items-center gap-3 border-b border-white/20 glass-panel px-5 py-3">
         {/* spec selector */}
         <div className="flex items-center gap-2">
           <label className="whitespace-nowrap text-xs font-medium text-[#6B7280]">Spec file</label>
           <select
             value={selectedSpec}
             onChange={e => setSelectedSpec(e.target.value)}
-            className="max-w-xs rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none transition focus:border-[#111827] focus:ring-4 focus:ring-[#111827]/10"
+            className="max-w-xs rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none transition focus:border-[#4B8BDB] focus:ring-4 focus:ring-[#4B8BDB]/20"
           >
             {specs.map(s => <option key={s} value={s}>{s}</option>)}
             {specs.length === 0 && <option value="">Loading specs…</option>}
@@ -388,7 +388,7 @@ export function DagViewer() {
             placeholder="Filter endpoints…"
             value={filter}
             onChange={e => setFilter(e.target.value)}
-            className="w-52 rounded-lg border border-[#E5E7EB] bg-white py-1.5 pl-7 pr-7 text-xs text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#111827] focus:ring-4 focus:ring-[#111827]/10"
+            className="w-52 rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm py-1.5 pl-7 pr-7 text-xs text-[#111827] outline-none transition placeholder:text-[#6B7280] focus:border-[#4B8BDB] focus:ring-4 focus:ring-[#4B8BDB]/20"
           />
           {filter && (
             <button onClick={() => setFilter("")} className="absolute right-2 text-[#9CA3AF] hover:text-[#111827]">
@@ -401,7 +401,7 @@ export function DagViewer() {
         <button
           onClick={() => setSelectedSpec(s => { const v = s; setSelectedSpec(""); setTimeout(() => setSelectedSpec(v), 10); return v })}
           title="Reload"
-          className="ml-auto flex items-center gap-1.5 rounded-lg border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:bg-[#F3F4F6] hover:text-[#111827]"
+          className="ml-auto flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2.5 py-1.5 text-xs font-medium text-[#374151] transition-colors hover:bg-white/70 hover:text-[#111827]"
         >
           <RefreshCw className="size-3.5" />
           Reload
@@ -414,7 +414,7 @@ export function DagViewer() {
       {/* main canvas */}
       <div className="relative flex-1 overflow-hidden">
         {loading && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/85">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/30 backdrop-blur-sm">
             <Loader2 className="size-8 animate-spin text-[#111827]" />
             <p className="text-sm text-[#6B7280]">Parsing spec and building graph...</p>
           </div>
@@ -454,7 +454,7 @@ export function DagViewer() {
 
       {/* method legend */}
       {dagData && dagData.nodes.length > 0 && (
-        <div className="flex flex-wrap items-center gap-3 border-t border-[#E5E7EB] bg-white px-5 py-3">
+        <div className="flex flex-wrap items-center gap-3 border-t border-white/20 glass-panel px-5 py-3">
           {Object.entries(METHOD_COLORS).map(([method, c]) => (
             <span key={method} className="flex items-center gap-1.5 text-xs text-[#6B7280]">
               <span className="size-2.5 rounded-full" style={{ background: c.bg }} />

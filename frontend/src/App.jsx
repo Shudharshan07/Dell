@@ -241,47 +241,49 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-[#EDEDEB] text-[#111827] antialiased">
-      <TooltipProvider>
-        <SidebarProvider>
-          <AppSidebar activePage={activePage} onPageChange={setActivePage} />
-          <main className="flex flex-1 flex-col overflow-hidden">
-            {activePage !== "tools" && (
-              <header className="flex h-14 items-center gap-3 border-b border-[#D1CFCA] bg-white px-4">
-                <SidebarTrigger className="rounded-lg text-[#706F6B] hover:bg-[#EAE8E3] hover:text-[#111827]" />
-                <div className="min-w-0 flex-1">
-                  <h1 className="truncate text-sm font-semibold text-[#111827]">{currentPage?.title}</h1>
-                  <p className="truncate text-xs text-[#706F6B]">{currentPage?.description}</p>
-                </div>
-                <div className="hidden w-full max-w-md items-center gap-2 rounded-lg border border-[#D1CFCA] bg-[#EDEDEB] px-3 py-2 text-sm text-[#706F6B] lg:flex">
-                  <Search className="size-4 shrink-0" />
-                  {activePage === "ingest" ? (
-                    <input
-                      className="flex-1 bg-transparent outline-none text-[#111827] placeholder:text-[#706F6B] text-sm"
-                      placeholder="Search sources or tools..."
-                      value={ingestSearch}
-                      onChange={(e) => setIngestSearch(e.target.value)}
-                    />
-                  ) : (
-                    <>
-                      <span className="flex-1">Search workflows, tools, traces...</span>
-                      <span className="inline-flex items-center gap-1 rounded-md border border-[#D1CFCA] bg-white px-1.5 py-0.5 text-[11px] text-[#706F6B]">
-                        <Command className="size-3" /> K
-                      </span>
-                    </>
-                  )}
-                </div>
-                <Button variant="ghost" size="icon-sm" className="rounded-lg text-[#706F6B] hover:bg-[#EAE8E3] hover:text-[#111827]">
-                  <Bell className="size-4" />
-                </Button>
-              </header>
-            )}
-            <div className="flex-1 overflow-hidden bg-[#EDEDEB]">
-              {pageContent}
-            </div>
-          </main>
-        </SidebarProvider>
-      </TooltipProvider>
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8">
+      <div className="app-shell w-full h-[calc(100vh-4rem)] flex text-[#111827] antialiased overflow-hidden">
+        <TooltipProvider>
+          <SidebarProvider>
+            <AppSidebar activePage={activePage} onPageChange={setActivePage} />
+            <main className="flex flex-1 flex-col overflow-hidden min-w-0">
+              {activePage !== "tools" && (
+                <header className="flex h-14 items-center gap-3 glass-header px-4 shrink-0">
+                  <SidebarTrigger className="rounded-lg text-[#374151] hover:bg-white/40 hover:text-[#111827]" />
+                  <div className="min-w-0 flex-1">
+                    <h1 className="truncate text-sm font-semibold text-[#111827]">{currentPage?.title}</h1>
+                    <p className="truncate text-xs text-[#4B7BB5]">{currentPage?.description}</p>
+                  </div>
+                  <div className="hidden w-full max-w-md items-center gap-2 rounded-lg border border-white/30 bg-white/40 backdrop-blur-sm px-3 py-2 text-sm text-[#555] lg:flex">
+                    <Search className="size-4 shrink-0 text-[#4B7BB5]" />
+                    {activePage === "ingest" ? (
+                      <input
+                        className="flex-1 bg-transparent outline-none text-[#111827] placeholder:text-[#888] text-sm"
+                        placeholder="Search sources or tools..."
+                        value={ingestSearch}
+                        onChange={(e) => setIngestSearch(e.target.value)}
+                      />
+                    ) : (
+                      <>
+                        <span className="flex-1 text-[#555]">Search workflows, tools, traces...</span>
+                        <span className="inline-flex items-center gap-1 rounded-md border border-white/40 bg-white/60 px-1.5 py-0.5 text-[11px] text-[#555]">
+                          <Command className="size-3" /> K
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="icon-sm" className="rounded-lg text-[#374151] hover:bg-white/40 hover:text-[#111827]">
+                    <Bell className="size-4" />
+                  </Button>
+                </header>
+              )}
+              <div className="flex-1 overflow-hidden glass-content">
+                {pageContent}
+              </div>
+            </main>
+          </SidebarProvider>
+        </TooltipProvider>
+      </div>
     </div>
   )
 }

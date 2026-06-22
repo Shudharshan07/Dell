@@ -34,7 +34,7 @@ function TokenMeter({ usage, live }) {
         type="button"
         onClick={() => setPinned((p) => !p)}
         title="Token usage — click to pin"
-        className="flex flex-col items-end rounded-lg border border-[#E5E7EB] bg-white px-2.5 py-1 text-right leading-tight transition hover:border-[#111827]"
+        className="flex flex-col items-end rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2.5 py-1 text-right leading-tight transition hover:border-white/60 hover:bg-white/70"
       >
         <span className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
           <Coins className="size-3" /> Tokens
@@ -625,14 +625,14 @@ export function AgentPlayground({ tools = [] }) {
 
   // ───────────────────────────────────────────────────────────────────────────
   return (
-    <section className="grid h-full min-h-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_24rem]">
+    <section className="grid h-full min-h-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_24rem] glass-content">
       {/* LEFT: controls + main panel */}
-      <div className="flex min-h-0 flex-col overflow-hidden border-r border-[#E5E7EB] bg-[#FAFAFA]">
+      <div className="flex min-h-0 flex-col overflow-hidden border-r border-white/30 bg-transparent">
         {/* control bar */}
-        <div className="max-h-[45vh] shrink-0 overflow-y-auto space-y-3 border-b border-[#E5E7EB] bg-white px-6 py-4">
+        <div className="max-h-[45vh] shrink-0 overflow-y-auto space-y-3 border-b border-white/30 bg-white/20 backdrop-blur-sm px-6 py-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-[#111827]">Agent Playground</h2>
-            <div className="flex rounded-lg border border-[#E5E7EB] p-0.5">
+            <div className="flex rounded-lg border border-white/30 bg-white/40 backdrop-blur-sm p-0.5">
               {["agent", "manual", "test"].map((m) => (
                 <button
                   key={m}
@@ -651,7 +651,7 @@ export function AgentPlayground({ tools = [] }) {
           {mode === "agent" && (
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Tool source</span>
-              <div className="flex rounded-lg border border-[#E5E7EB] p-0.5">
+              <div className="flex rounded-lg border border-white/30 bg-white/40 backdrop-blur-sm p-0.5">
                 {[
                   ["toolset", "Toolset"],
                   ["workflow", "Workflows"],
@@ -690,7 +690,7 @@ export function AgentPlayground({ tools = [] }) {
                 <select
                   value={toolsetId}
                   onChange={(e) => setToolsetId(e.target.value)}
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#111827]"
+                  className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
                 >
                   {toolsets.length === 0 && <option value="">No toolsets</option>}
                   {toolsets.map((t) => (
@@ -715,7 +715,7 @@ export function AgentPlayground({ tools = [] }) {
                   {/* toolsets */}
                   <div>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Toolsets</p>
-                    <div className="max-h-32 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-2 space-y-1">
+                    <div className="max-h-32 overflow-y-auto rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm p-2 space-y-1">
                       {toolsets.length === 0 && <span className="text-[11px] text-[#9CA3AF]">No toolsets</span>}
                       {toolsets.map(t => {
                         const checked = selectedToolsetIds.includes(t.toolset_id)
@@ -739,7 +739,7 @@ export function AgentPlayground({ tools = [] }) {
                   {/* workflow sources */}
                   <div>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Workflow Sources</p>
-                    <div className="max-h-32 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-2 space-y-1">
+                    <div className="max-h-32 overflow-y-auto rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm p-2 space-y-1">
                       {sources.length === 0 && <span className="text-[11px] text-[#9CA3AF]">No sources</span>}
                       {sources.map(s => {
                         const checked = selectedSourceIds.includes(s.id)
@@ -793,7 +793,7 @@ export function AgentPlayground({ tools = [] }) {
                 <select
                   value={sourceId}
                   onChange={(e) => setSourceId(e.target.value)}
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#111827]"
+                  className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
                 >
                   <option value="__auto__">
                     ⚡ Auto (task-routed){allAgg ? ` — ~3-5 of ${allApisToolCount} tools` : ""}
@@ -819,7 +819,7 @@ export function AgentPlayground({ tools = [] }) {
                   <select
                     value={provider}
                     onChange={(e) => setProvider(e.target.value)}
-                    className="rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#111827]"
+                    className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
                   >
                     <option value="auto">Auto</option>
                     {providers.map((p) => (
@@ -834,7 +834,7 @@ export function AgentPlayground({ tools = [] }) {
                   <select
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    className="rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#111827]"
+                    className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
                   >
                     {(activeProvider?.models ?? []).map((m) => (
                       <option key={m} value={m}>{m}</option>
@@ -857,12 +857,12 @@ export function AgentPlayground({ tools = [] }) {
                     key={`${item.role}-${index}`}
                     className={`max-w-[82%] rounded-xl border px-4 py-3 text-sm leading-6 whitespace-pre-wrap ${
                       item.role === "user"
-                        ? "ml-auto border-[#111827] bg-[#111827] text-white"
+                        ? "ml-auto border-white/40 bg-white/50 text-[#111827] backdrop-blur-sm"
                         : item.role === "error"
-                        ? "border-red-200 bg-red-50 text-red-700"
+                        ? "border-red-400 bg-red-500/20 text-red-100 backdrop-blur-sm"
                         : item.role === "system"
-                        ? "mx-auto border-dashed border-[#D1D5DB] bg-white text-[11px] font-mono text-[#6B7280]"
-                        : "border-[#E5E7EB] bg-white text-[#374151]"
+                        ? "mx-auto border-dashed border-white/40 bg-white/20 text-[11px] font-mono text-[#374151] backdrop-blur-sm"
+                        : "border-white/30 glass-card text-[#111827]"
                     }`}
                   >
                     {item.content}
@@ -876,7 +876,7 @@ export function AgentPlayground({ tools = [] }) {
               </div>
             </div>
 
-            <form onSubmit={sendMessage} className="border-t border-[#E5E7EB] bg-white p-4">
+            <form onSubmit={sendMessage} className="border-t border-white/30 bg-white/20 backdrop-blur-sm p-4">
               <div className="mx-auto flex max-w-3xl gap-2">
                 <Input
                   value={message}
@@ -903,7 +903,7 @@ export function AgentPlayground({ tools = [] }) {
                 <select
                   value={manualToolId}
                   onChange={(e) => setManualToolId(e.target.value)}
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#111827]"
+                  className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#4B8BDB]"
                 >
                   <option value="">Select a tool…</option>
                   {selectedTools.map((t) => (
@@ -913,7 +913,7 @@ export function AgentPlayground({ tools = [] }) {
               </label>
 
               {manualTool && (
-                <div className="space-y-4 rounded-xl border border-[#E5E7EB] bg-white p-4">
+                <div className="space-y-4 rounded-xl border border-white/30 glass-card p-4">
                   <div className="flex items-center gap-2 font-mono text-xs">
                     <span className="font-bold text-emerald-600">{manualTool.method}</span>
                     <span className="text-[#55534E]">{manualTool.path}</span>
@@ -986,7 +986,7 @@ export function AgentPlayground({ tools = [] }) {
             <div className="mx-auto max-w-5xl space-y-5">
 
               {/* config row — single source, shared provider/model */}
-              <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3">
+              <div className="rounded-xl border border-white/30 glass-card p-4 space-y-3">
                 <p className="text-xs font-bold text-[#111827]">Test Configuration</p>
                 <p className="text-[11px] text-[#6B7280]">
                   Pick one API source. Both sides run the same prompt — A uses workflow/MCP mode (progressive disclosure), B uses raw toolset mode (all schemas sent upfront). Same source, same model, same prompt — the only difference is how tools are surfaced.
@@ -995,21 +995,21 @@ export function AgentPlayground({ tools = [] }) {
                   <label className="flex flex-col gap-1">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Provider</span>
                     <select value={provider} onChange={e => setProvider(e.target.value)}
-                      className="rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#111827]">
+                      className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]">
                       {providers.map(p => <option key={p.id} value={p.id} disabled={!p.available}>{p.label}</option>)}
                     </select>
                   </label>
                   <label className="flex flex-col gap-1">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Model</span>
                     <select value={model} onChange={e => setModel(e.target.value)}
-                      className="rounded-lg border border-[#E5E7EB] bg-white px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#111827]">
+                      className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]">
                       {(activeProvider?.models ?? []).map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </label>
                   <label className="flex flex-col gap-1">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-[#111827]">API Source (both sides)</span>
                     <select value={testSourceId} onChange={e => setTestSourceId(e.target.value)}
-                      className="rounded-lg border border-[#111827] bg-white px-2 py-1.5 text-xs text-[#111827] font-semibold outline-none focus:border-[#111827]">
+                      className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-2 py-1.5 text-xs text-[#111827] font-semibold outline-none focus:border-[#4B8BDB]">
                       {sources.length === 0 && <option value="">No sources — ingest a spec first</option>}
                       {sources.map(s => <option key={s.id} value={s.id}>{s.id} ({s.total_tools} tools)</option>)}
                     </select>
@@ -1116,8 +1116,8 @@ export function AgentPlayground({ tools = [] }) {
       </div>
 
       {/* RIGHT: live execution trace */}
-      <aside className="flex min-h-0 flex-col overflow-hidden bg-white">
-        <div className="border-b border-[#E5E7EB] px-5 py-4">
+      <aside className="flex min-h-0 flex-col overflow-hidden bg-transparent border-l border-white/30">
+        <div className="border-b border-white/30 bg-white/20 backdrop-blur-sm px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-[#111827]">Live Execution Trace</h3>
@@ -1138,7 +1138,7 @@ export function AgentPlayground({ tools = [] }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          <div className="mb-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-4">
+          <div className="mb-4 rounded-xl border border-white/30 glass-card p-4">
             <div className="flex items-center gap-2 text-sm font-medium text-[#111827]">
               <Bot className="size-4" />
               {isWorkflowMode ? "Active Workflow Tools" : toolSource === "combined" ? "Combined Tool Surface" : "Active Toolset"}
@@ -1324,7 +1324,7 @@ export function AgentPlayground({ tools = [] }) {
           ) : (
             <div className="space-y-3">
               {trace.map((step) => (
-                <div key={step.id} className="rounded-xl border border-[#E5E7EB] bg-white p-4 transition duration-150 hover:bg-[#FAFAFA]">
+                <div key={step.id} className="rounded-xl border border-white/30 glass-card p-4 transition duration-150 hover:bg-white/40">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                       {step.status === "running" ? (
@@ -1345,7 +1345,7 @@ export function AgentPlayground({ tools = [] }) {
                   </div>
                   <p className="mt-2 break-all font-mono text-[10px] leading-4 text-[#6B7280]">{step.detail}</p>
                   {step.preview && (
-                    <pre className="mt-2 max-h-32 overflow-auto rounded border border-[#E5E7EB] bg-[#FAFAFA] p-2 text-[10px] leading-4 text-[#374151]">
+                    <pre className="mt-2 max-h-32 overflow-auto rounded border border-white/20 bg-black/60 backdrop-blur-md p-2 text-[10px] leading-4 text-emerald-300 shadow-inner">
                       {step.preview}
                     </pre>
                   )}

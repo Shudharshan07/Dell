@@ -5,18 +5,18 @@ import { Button } from "@/components/ui/button"
 function MetricCard({ icon: Icon, label, from, to, pct, note }) {
   const good = pct >= 0
   return (
-    <div className="flex-1 rounded-xl border border-[#E5E7EB] bg-white p-4">
-      <div className="flex items-center gap-2 text-xs font-semibold text-[#6B7280]">
+    <div className="flex-1 rounded-xl border border-white/30 glass-card p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[#374151]">
         <Icon className="size-4" /> {label}
       </div>
       <div className="mt-2 flex items-baseline gap-2">
         <span className="font-mono text-2xl font-bold text-[#111827]">{to?.toLocaleString?.() ?? to}</span>
-        <span className="text-xs text-[#9CA3AF]">from {from?.toLocaleString?.() ?? from}</span>
+        <span className="text-xs text-[#6B7280]">from {from?.toLocaleString?.() ?? from}</span>
       </div>
       <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${good ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
         {good ? "▼" : "▲"} {Math.abs(pct)}% {good ? "fewer" : "more"}
       </div>
-      {note && <p className="mt-1.5 text-[10px] leading-3 text-[#9CA3AF]">{note}</p>}
+      {note && <p className="mt-1.5 text-[10px] leading-3 text-[#6B7280]">{note}</p>}
     </div>
   )
 }
@@ -36,15 +36,15 @@ function PendingCard({ item, onApprove, onReject }) {
   }
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-white p-3 space-y-2">
+    <div className="rounded-lg border border-amber-300 bg-amber-50/60 backdrop-blur-sm p-3 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs font-semibold text-[#111827]">{item.name}</span>
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">agent-proposed</span>
-            <span className="text-[10px] text-[#9CA3AF]">{item.source_id} / {item.workflow_id}</span>
+            <span className="rounded-full bg-amber-200/50 px-2 py-0.5 text-[10px] font-bold text-amber-800">agent-proposed</span>
+            <span className="text-[10px] text-[#6B7280]">{item.source_id} / {item.workflow_id}</span>
           </div>
-          <p className="mt-0.5 text-[11px] text-[#6B7280]">{item.description}</p>
+          <p className="mt-0.5 text-[11px] text-[#374151]">{item.description}</p>
         </div>
         <div className="flex shrink-0 gap-1">
           <button onClick={handleApprove} disabled={busy}
@@ -52,18 +52,18 @@ function PendingCard({ item, onApprove, onReject }) {
             {busy ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3" />} Approve
           </button>
           <button onClick={() => onReject(item.id)}
-            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50">
+            className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-white/50 px-2 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-100">
             <X className="size-3" /> Reject
           </button>
         </div>
       </div>
       <div>
-        <p className="mb-1 text-[10px] font-semibold text-[#9CA3AF]">Steps (editable JSON)</p>
+        <p className="mb-1 text-[10px] font-semibold text-[#6B7280]">Steps (editable JSON)</p>
         <textarea
           rows={Math.min(8, item.steps.length * 2 + 2)}
           value={steps}
           onChange={e => { setSteps(e.target.value); setStepsErr(null) }}
-          className="w-full rounded border border-[#E5E7EB] bg-[#FAFAFA] px-2 py-1.5 font-mono text-[10px] outline-none focus:border-[#111827]"
+          className="w-full rounded border border-white/50 bg-white/40 px-2 py-1.5 font-mono text-[10px] outline-none focus:border-[#4B8BDB] backdrop-blur-sm"
         />
         {stepsErr && <p className="text-[10px] text-red-600">{stepsErr}</p>}
       </div>
@@ -229,11 +229,10 @@ export function WorkflowView() {
   const workflows = data?.workflows ?? []
 
   return (
-    <div className="h-full overflow-y-auto bg-[#FAFAFA]">
+    <div className="h-full overflow-y-auto glass-content">
       <div className="mx-auto max-w-5xl space-y-5 p-6">
         {/* header */}
-        {/* header */}
-        <div className="flex flex-col gap-4 rounded-xl border border-[#E5E7EB] bg-white p-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-4 rounded-xl border border-white/30 glass-card p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-1">
             <h2 className="flex items-center gap-2 text-base font-bold text-[#111827]">
               <GitBranch className="size-5" /> Workflow Proxy
@@ -247,7 +246,7 @@ export function WorkflowView() {
             <select
               value={sourceId}
               onChange={(e) => setSourceId(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#111827]"
+              className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
             >
               {Object.keys(sources).length === 0 && <option value="">No APIs ingested</option>}
               {Object.entries(sources).map(([id, s]) => (
@@ -258,7 +257,7 @@ export function WorkflowView() {
               value={profile}
               onChange={(e) => setProfile(e.target.value)}
               title="Clustering profile"
-              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#111827]"
+              className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
             >
               <option value="auto">Profile: Auto</option>
               <option value="redfish">Profile: Redfish</option>
@@ -283,7 +282,7 @@ export function WorkflowView() {
         {/* Feature 1: tailored-generate summary — these workflows are specific to
             the ingested spec (auto-clustered + synthesized + AI). */}
         {data?.source_name && (data.auto_plan_count != null || data.ai_plan_count != null) && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+          <div className="rounded-xl border border-emerald-400 bg-emerald-50/70 backdrop-blur-md p-4 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="flex items-center gap-2 text-xs font-bold text-emerald-800">
                 <Zap className="size-4" /> Workflows tailored to
@@ -315,7 +314,7 @@ export function WorkflowView() {
 
         {/* AI discovery result banner */}
         {discovery && (
-          <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-4">
+          <div className="rounded-xl border border-violet-400 bg-violet-50/70 backdrop-blur-md p-4 shadow-sm">
             <div className="mb-2 flex items-center justify-between">
               <span className="flex items-center gap-2 text-xs font-bold text-violet-800">
                 <Sparkles className="size-4" /> AI-discovered workflows
@@ -372,15 +371,15 @@ export function WorkflowView() {
 
         {/* progressive-disclosure browse: search operations */}
         {workflows.length > 0 && (
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">
+          <div className="rounded-xl border border-white/30 glass-card p-4">
             <form onSubmit={search} className="flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-lg border border-[#E5E7EB] px-3">
-                <Search className="size-4 shrink-0 text-[#9CA3AF]" />
+              <div className="flex flex-1 items-center gap-2 rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3">
+                <Search className="size-4 shrink-0 text-[#6B7280]" />
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search operations (progressive disclosure) — e.g. ability score"
-                  className="w-full bg-transparent py-2 text-xs text-[#111827] outline-none"
+                  className="w-full bg-transparent py-2 text-xs text-[#111827] outline-none placeholder:text-[#6B7280]"
                 />
               </div>
               <Button type="submit" disabled={searching || !searchQuery.trim()} className="bg-[#111827] text-white hover:bg-black">
@@ -437,7 +436,7 @@ export function WorkflowView() {
             {workflows.map((w) => {
               const open = expanded === w.id
               return (
-                <div key={w.id} className="rounded-xl border border-[#E5E7EB] bg-white">
+                <div key={w.id} className="rounded-xl border border-white/30 glass-card">
                   <button
                     onClick={() => setExpanded(open ? null : w.id)}
                     className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
@@ -452,7 +451,7 @@ export function WorkflowView() {
                   </button>
 
                   {open && (
-                    <div className="space-y-1 border-t border-[#E5E7EB] p-3">
+                    <div className="space-y-1 border-t border-white/20 p-3">
                       {/* synthesized + AI multi-step plans */}
                       {(plansByWf[w.id] ?? []).length > 0 && (
                         <div className="mb-2 space-y-1">
@@ -462,7 +461,7 @@ export function WorkflowView() {
                           {(plansByWf[w.id] ?? []).map((p) => {
                             const isAi = p.source === "ai"
                             return (
-                              <div key={p.name} className="flex items-center justify-between gap-2 rounded-lg bg-[#FAFAFA] px-3 py-2">
+                              <div key={p.name} className="flex items-center justify-between gap-2 rounded-lg bg-white/40 border border-white/20 px-3 py-2 backdrop-blur-sm">
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
                                     <span className="font-mono text-xs font-semibold text-[#111827]">{p.name}</span>
@@ -475,7 +474,7 @@ export function WorkflowView() {
                                 </div>
                                 <button
                                   onClick={() => run(w.id, `plan:${p.name}`)}
-                                  className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#E5E7EB] bg-white px-2 py-1 text-[11px] font-semibold text-[#374151] hover:bg-[#F3F4F6]"
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/30 bg-white/60 px-2 py-1 text-[11px] font-semibold text-[#374151] hover:bg-white/80"
                                 >
                                   <Play className="size-3" /> Run
                                 </button>
@@ -485,12 +484,12 @@ export function WorkflowView() {
                         </div>
                       )}
                       {w.report && (
-                        <div className="mb-1 flex items-center justify-between gap-2 rounded-lg bg-indigo-50/60 px-3 py-2">
+                        <div className="mb-1 flex items-center justify-between gap-2 rounded-lg bg-indigo-50/70 border border-indigo-200 px-3 py-2 backdrop-blur-sm">
                           <div className="min-w-0">
                             <span className="font-mono text-xs font-semibold text-indigo-700">__report__</span>
                             <span className="ml-2 text-[11px] text-[#6B7280]">list collection → fetch item details (multi-step)</span>
                           </div>
-                          <button onClick={() => run(w.id, "__report__")} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-indigo-200 bg-white px-2 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-50">
+                          <button onClick={() => run(w.id, "__report__")} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-indigo-300 bg-white/70 px-2 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100">
                             <Play className="size-3" /> Run
                           </button>
                         </div>
@@ -504,7 +503,7 @@ export function WorkflowView() {
                         const needsBody = ["POST","PUT","PATCH"].includes(o.method)
                         const setP = (patch) => setRunParams(prev => ({ ...prev, [key]: { ...(prev[key] ?? {}), ...patch } }))
                         return (
-                          <div key={o.operation_id} className="rounded-lg hover:bg-[#FAFAFA]">
+                          <div key={o.operation_id} className="rounded-lg hover:bg-white/40 transition">
                             <div className="flex items-center justify-between gap-2 px-3 py-1.5">
                               <div className="flex min-w-0 items-center gap-2 font-mono text-[11px]">
                                 <span className="w-12 shrink-0 font-bold text-emerald-600">{o.method}</span>
@@ -513,13 +512,13 @@ export function WorkflowView() {
                               </div>
                               <button
                                 onClick={() => setRunParamsOpen(open ? null : key)}
-                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#E5E7EB] bg-white px-2 py-1 text-[10px] font-semibold text-[#374151] hover:bg-[#F3F4F6]"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/30 bg-white/50 px-2 py-1 text-[10px] font-semibold text-[#374151] hover:bg-white/70"
                               >
                                 <Play className="size-3" /> Run
                               </button>
                             </div>
                             {open && (
-                              <div className="mx-3 mb-2 space-y-2 rounded-lg border border-[#E5E7EB] bg-white p-3">
+                              <div className="mx-3 mb-2 space-y-2 rounded-lg border border-white/30 bg-white/40 backdrop-blur-sm p-3">
                                 {pathPlaceholders.map(ph => (
                                   <div key={ph} className="flex items-center gap-2">
                                     <span className="w-28 shrink-0 font-mono text-[10px] text-[#9CA3AF]">{ph} (path)</span>
@@ -527,7 +526,7 @@ export function WorkflowView() {
                                       value={p.path?.[ph] ?? ""}
                                       onChange={e => setP({ path: { ...(p.path ?? {}), [ph]: e.target.value } })}
                                       placeholder={ph}
-                                      className="flex-1 rounded border border-[#E5E7EB] px-2 py-1 font-mono text-[11px] outline-none focus:border-[#111827]"
+                                      className="flex-1 rounded border border-white/30 bg-white/50 px-2 py-1 font-mono text-[11px] outline-none focus:border-[#4B8BDB] backdrop-blur-sm"
                                     />
                                   </div>
                                 ))}
@@ -538,7 +537,7 @@ export function WorkflowView() {
                                       value={p.query?.[qp] ?? ""}
                                       onChange={e => setP({ query: { ...(p.query ?? {}), [qp]: e.target.value } })}
                                       placeholder={qp}
-                                      className="flex-1 rounded border border-[#E5E7EB] px-2 py-1 font-mono text-[11px] outline-none focus:border-[#111827]"
+                                      className="flex-1 rounded border border-white/30 bg-white/50 px-2 py-1 font-mono text-[11px] outline-none focus:border-[#4B8BDB] backdrop-blur-sm"
                                     />
                                   </div>
                                 ))}
@@ -550,7 +549,7 @@ export function WorkflowView() {
                                       value={p.bodyText ?? ""}
                                       onChange={e => setP({ bodyText: e.target.value })}
                                       placeholder='{"key": "value"}'
-                                      className="flex-1 rounded border border-[#E5E7EB] px-2 py-1 font-mono text-[11px] outline-none focus:border-[#111827]"
+                                      className="flex-1 rounded border border-white/30 bg-white/50 px-2 py-1 font-mono text-[11px] outline-none focus:border-[#4B8BDB] backdrop-blur-sm"
                                     />
                                   </div>
                                 )}
@@ -572,14 +571,14 @@ export function WorkflowView() {
             })}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-[#E5E7EB] py-12 text-center text-sm text-[#9CA3AF]">
+          <div className="rounded-xl border border-dashed border-white/40 bg-white/20 backdrop-blur-sm py-12 text-center text-sm text-[#374151]">
             {sourceId ? "Click Generate to cluster this API into workflow tools." : "Ingest an API first (Your APIs)."}
           </div>
         )}
 
         {/* execution result */}
         {result && (
-          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4">
+          <div className="rounded-xl border border-white/30 glass-card p-4">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-semibold text-[#111827]">Execution result</span>
               <button onClick={() => setResult(null)} className="text-xs text-[#9CA3AF] hover:text-[#111827]">clear</button>
@@ -587,7 +586,7 @@ export function WorkflowView() {
             {result.loading ? (
               <div className="flex items-center gap-2 text-xs text-[#6B7280]"><Loader2 className="size-3.5 animate-spin" /> running…</div>
             ) : (
-              <pre className="max-h-80 overflow-auto rounded-lg border border-[#E5E7EB] bg-[#1E1E1E] p-3 text-[11px] leading-5 text-emerald-300">
+              <pre className="max-h-80 overflow-auto rounded-lg border border-white/20 bg-black/60 backdrop-blur-md p-3 text-[11px] leading-5 text-emerald-300">
                 {JSON.stringify(result, null, 2)}
               </pre>
             )}

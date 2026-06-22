@@ -40,15 +40,15 @@ const consumeItems = [
 
 export function AppSidebar({ activePage, onPageChange }) {
   return (
-    <Sidebar collapsible="icon" className="border-r border-[#D0CECA] bg-[#E3E1DC]">
+    <Sidebar collapsible="icon" className="glass-sidebar border-r-0">
       <SidebarHeader className="px-5 pb-2 pt-6 group-data-[collapsible=icon]:px-0">
         <div className="flex items-center justify-between gap-2">
           {/* full wordmark (expanded) */}
-          <span className="wordmark-dell text-[22px] leading-none text-[#111827] group-data-[collapsible=icon]:hidden">
+          <span className="wordmark-dell text-[22px] leading-none font-bold text-[#1a3a5c] group-data-[collapsible=icon]:hidden">
             OneMCP
           </span>
           {/* compact mark (collapsed rail) */}
-          <span className="wordmark-dell mx-auto hidden text-[22px] leading-none text-[#111827] group-data-[collapsible=icon]:block">
+          <span className="wordmark-dell mx-auto hidden text-[22px] leading-none font-bold text-[#1a3a5c] group-data-[collapsible=icon]:block">
             O
           </span>
         </div>
@@ -57,7 +57,7 @@ export function AppSidebar({ activePage, onPageChange }) {
       <SidebarContent className="gap-5 px-3 py-4">
         {/* CREATE SECTION */}
         <div className="space-y-1">
-          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#787670] group-data-[collapsible=icon]:hidden">Create</span>
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#4B7BB5] group-data-[collapsible=icon]:hidden">Create</span>
           <SidebarMenu className="mt-1">
             {createItems.map((item) => {
               const isActive = activePage === item.id || (item.id === "tools" && activePage === "tools")
@@ -67,7 +67,7 @@ export function AppSidebar({ activePage, onPageChange }) {
                     isActive={isActive}
                     tooltip={item.title}
                     onClick={() => !item.disabled && onPageChange(item.id)}
-                    className={`rounded-lg text-[#55534E] font-medium transition-all duration-150 hover:bg-[#D4D2CD] hover:text-[#111827] data-active:bg-[#D4D2CD] data-active:text-[#111827] data-active:shadow-none ${item.disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                    className={`rounded-lg text-[#374151] font-medium transition-all duration-150 hover:bg-black/8 hover:text-[#111827] data-active:bg-black/10 data-active:text-[#111827] data-active:shadow-none ${item.disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
                       }`}
                   >
                     <item.icon className="size-4" />
@@ -81,7 +81,7 @@ export function AppSidebar({ activePage, onPageChange }) {
 
         {/* CONSUME SECTION */}
         <div className="space-y-1">
-          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#787670] group-data-[collapsible=icon]:hidden">Consume</span>
+          <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#4B7BB5] group-data-[collapsible=icon]:hidden">Consume</span>
           <SidebarMenu className="mt-1">
             {consumeItems.map((item) => {
               const isActive = activePage === item.id
@@ -91,7 +91,7 @@ export function AppSidebar({ activePage, onPageChange }) {
                     isActive={isActive}
                     tooltip={item.title}
                     onClick={() => !item.disabled && onPageChange(item.id)}
-                    className={`rounded-lg text-[#55534E] font-medium transition-all duration-150 hover:bg-[#D4D2CD] hover:text-[#111827] data-active:bg-[#D4D2CD] data-active:text-[#111827] data-active:shadow-none ${item.disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                    className={`rounded-lg text-[#374151] font-medium transition-all duration-150 hover:bg-black/8 hover:text-[#111827] data-active:bg-black/10 data-active:text-[#111827] data-active:shadow-none ${item.disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
                       }`}
                   >
                     <item.icon className="size-4" />

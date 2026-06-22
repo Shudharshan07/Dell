@@ -340,11 +340,11 @@ export function ToolsetManager({
   const activeToolsCount = selectedToolset?.tools?.filter(t => t.selected)?.length ?? 0
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#EDEDEB]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       {/* Header bar styled like the mockup */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#D0CECA] bg-white px-6">
+      <header className="flex h-14 shrink-0 items-center justify-between glass-header px-6">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className="rounded-lg text-[#787670] hover:bg-[#EAE8E3] hover:text-[#111827]" />
+          <SidebarTrigger className="rounded-lg text-[#787670] hover:bg-white/40 hover:text-[#111827]" />
           <span className="text-[#D0CECA] font-light">|</span>
           <nav className="flex items-center gap-2 text-xs font-semibold text-[#55534E]">
             <button
@@ -397,7 +397,7 @@ export function ToolsetManager({
       </header>
 
       {/* Main View Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto glass-content">
         {/* LIST VIEW */}
         {view === "list" && (
           <div className="max-w-5xl mx-auto p-8 space-y-6">
@@ -407,7 +407,7 @@ export function ToolsetManager({
                 return (
                   <div
                     key={ts.toolset_id}
-                    className="relative bg-white rounded-xl border border-[#D0CECA] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition duration-150 hover:shadow-md cursor-pointer"
+                    className="relative glass-card rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer"
                     onClick={() => {
                       setSelectedToolset(ts)
                       setView("detail")
@@ -421,7 +421,7 @@ export function ToolsetManager({
                     <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setListDropdownOpenId(listDropdownOpenId === ts.toolset_id ? null : ts.toolset_id)}
-                        className="workspace-pill hover:bg-[#EAE8E3] transition px-3 py-1.5 flex items-center gap-1.5"
+                        className="workspace-pill hover:bg-white/60 transition px-3 py-1.5 flex items-center gap-1.5"
                       >
                         {activeTools.length} Tools
                         <ChevronDown className="size-3 text-[#787670]" />
@@ -429,7 +429,7 @@ export function ToolsetManager({
 
                       {/* Dropdown Menu listing tools */}
                       {listDropdownOpenId === ts.toolset_id && (
-                        <div className="absolute right-0 mt-2 w-64 bg-[#1E1E1E] text-white text-xs font-mono rounded-lg shadow-xl border border-[#2B2B2B] py-2 z-30 max-h-60 overflow-y-auto">
+                        <div className="absolute right-0 mt-2 w-64 bg-[#1E1E1E]/80 backdrop-blur-md text-white text-xs font-mono rounded-lg shadow-xl border border-white/10 py-2 z-30 max-h-60 overflow-y-auto">
                           {activeTools.length === 0 ? (
                             <div className="px-4 py-2 text-[#787670] italic">No active tools</div>
                           ) : (
@@ -453,7 +453,7 @@ export function ToolsetManager({
                   setIsCreateOpen(true)
                 }
                 }
-                className="w-full bg-[#EDEDEB] hover:bg-white rounded-xl border border-dashed border-[#D0CECA] py-8 flex flex-col items-center justify-center gap-2 transition cursor-pointer text-[#787670] hover:text-[#111827] font-semibold"
+                className="w-full bg-white/30 backdrop-blur-xs hover:bg-white/60 rounded-xl border border-dashed border-white/40 py-8 flex flex-col items-center justify-center gap-2 transition cursor-pointer text-[#787670] hover:text-[#111827] font-semibold"
               >
                 <Plus className="size-6" />
                 <span>New Toolset</span>
@@ -485,7 +485,7 @@ export function ToolsetManager({
                       value={editedDesc}
                       onChange={(e) => setEditedDesc(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSaveDescription()}
-                      className="bg-white border-[#D0CECA] focus-visible:ring-1 focus-visible:ring-[#111827]"
+                      className="workspace-input bg-white/60 backdrop-blur-sm border-white/30 focus-visible:ring-1 focus-visible:ring-[#4B8BDB]"
                       autoFocus
                     />
                     <Button onClick={handleSaveDescription} size="sm" className="bg-[#111827] text-white hover:bg-black">Save</Button>
@@ -509,7 +509,7 @@ export function ToolsetManager({
                 <Button
                   onClick={() => onNavigatePage?.("playground")}
                   variant="outline"
-                  className="bg-white border-[#D0CECA] hover:bg-[#EAE8E3] text-xs font-semibold px-4 rounded-full h-10 gap-1.5 text-[#111827]"
+                  className="bg-white/60 backdrop-blur-sm border-white/30 hover:bg-white/80 text-xs font-semibold px-4 rounded-full h-10 gap-1.5 text-[#111827]"
                 >
                   Playground <Bot className="size-4" />
                 </Button>
@@ -524,14 +524,14 @@ export function ToolsetManager({
                 <div className="relative">
                   <button
                     onClick={() => setActiveToolsDropdownOpen(!activeToolsDropdownOpen)}
-                    className="bg-[#EAE8E3] text-[#111827] border border-[#D0CECA] text-xs font-semibold px-4 py-2.5 rounded-full flex items-center gap-1.5 hover:bg-[#D4D2CD] transition"
+                    className="bg-white/50 backdrop-blur-sm text-[#111827] border border-white/30 text-xs font-semibold px-4 py-2.5 rounded-full flex items-center gap-1.5 hover:bg-white/70 transition"
                   >
                     {activeToolsCount === 0 ? "No Tools" : `${activeToolsCount} Tools`}
                     <ChevronDown className="size-3 text-[#787670]" />
                   </button>
 
                   {activeToolsDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-[#1E1E1E] text-white text-xs font-mono rounded-lg shadow-xl border border-[#2B2B2B] py-2 z-30 max-h-60 overflow-y-auto">
+                    <div className="absolute right-0 mt-2 w-64 bg-[#1E1E1E]/80 backdrop-blur-md text-white text-xs font-mono rounded-lg shadow-xl border border-white/10 py-2 z-30 max-h-60 overflow-y-auto">
                       {activeToolsCount === 0 ? (
                         <div className="px-4 py-2 text-[#787670] italic">No active tools</div>
                       ) : (
@@ -548,14 +548,14 @@ export function ToolsetManager({
             </div>
 
             {/* Navigation tabs */}
-            <div className="flex gap-2.5 border-b border-[#D0CECA] pb-3">
+            <div className="flex gap-2.5 border-b border-white/30 pb-3">
               {["Tools", "Custom Tools", "Prompts", "MCP", "SDK", "Environments"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition duration-150 ${activeTab === tab
-                      ? "bg-[#111827] text-white border-[#111827]"
-                      : "bg-white text-[#787670] border-[#D1CFCA] hover:bg-[#EAE8E3]"
+                      ? "bg-white/90 text-[#111827] border-white/60 shadow-sm"
+                      : "bg-white/30 text-[#787670] border-white/30 hover:bg-white/50 backdrop-blur-sm"
                     }`}
                 >
                   {tab}
@@ -566,18 +566,18 @@ export function ToolsetManager({
             {/* TAB CONTENT: Tools */}
             {activeTab === "Tools" && (
               <div className="space-y-4">
-                {activeToolsCount === 0 ? (
-                  <button
-                    onClick={handleOpenUpdate}
-                    className="w-full bg-[#EDEDEB] hover:bg-white rounded-xl border border-dashed border-[#D0CECA] py-14 flex flex-col items-center justify-center gap-2 transition cursor-pointer text-[#787670] hover:text-[#111827] font-semibold"
-                  >
+                  {activeToolsCount === 0 ? (
+                    <button
+                      onClick={handleOpenUpdate}
+                      className="w-full bg-white/30 backdrop-blur-xs hover:bg-white/60 rounded-xl border border-dashed border-white/50 py-14 flex flex-col items-center justify-center gap-2 transition cursor-pointer text-[#374151] hover:text-[#111827] font-semibold"
+                    >
                     <Plus className="size-6" />
                     <span>+ Add Tool</span>
                   </button>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-1">
                     {selectedToolset.tools.filter(t => t.selected).map((tool) => (
-                      <div key={tool.id} className="bg-white border border-[#D1CFCA] rounded-xl p-5 space-y-3 shadow-xs">
+                      <div key={tool.id} className="glass-card rounded-xl p-5 space-y-3">
                         <div className="flex justify-between items-start">
                           <span className="font-mono text-xs font-bold text-[#111827]">{tool.id}</span>
                           <span className="bg-[#EAE8E3] text-[#111827] px-2 py-0.5 rounded text-[10px] font-mono border border-[#D1CFCA]">
@@ -591,7 +591,7 @@ export function ToolsetManager({
                         </div>
 
                         {tool.description && (
-                          <div className="border-l-2 border-[#D1CFCA] pl-3 text-xs text-[#55534E] leading-relaxed italic bg-[#FAFAFA] py-2 pr-2 rounded-r whitespace-pre-wrap">
+                          <div className="border-l-2 border-white/40 pl-3 text-xs text-[#55534E] leading-relaxed italic bg-white/30 backdrop-blur-sm py-2 pr-2 rounded-r whitespace-pre-wrap">
                             {tool.description}
                           </div>
                         )}
@@ -633,7 +633,7 @@ export function ToolsetManager({
                 <select
                   value={tagFilter}
                   onChange={(e) => setTagFilter(e.target.value)}
-                  className="w-full appearance-none rounded-lg border border-[#D0CECA] bg-white px-4 py-2.5 text-sm text-[#111827] outline-none font-medium pr-10 cursor-pointer"
+                  className="w-full appearance-none rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-4 py-2.5 text-sm text-[#111827] outline-none font-medium pr-10 cursor-pointer focus:border-[#4B8BDB]"
                 >
                   <option value="All">Filter By Tag</option>
                   <option value="GET">GET Methods</option>
@@ -651,15 +651,15 @@ export function ToolsetManager({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search routes"
-                  className="bg-white border-[#D0CECA] pl-10 h-11 text-sm focus-visible:ring-1 focus-visible:ring-[#111827]"
+                  className="workspace-input bg-white/60 backdrop-blur-sm border-white/30 pl-10 h-11 text-sm focus-visible:ring-1 focus-visible:ring-[#4B8BDB]"
                 />
               </div>
             </div>
 
             {/* Tools table list */}
-            <div className="bg-white rounded-xl border border-[#D0CECA] overflow-hidden">
+            <div className="glass-card rounded-xl overflow-hidden">
               {/* Header row */}
-              <div className="flex items-center justify-between bg-[#FAFAFA] border-b border-[#D0CECA] px-6 py-4">
+              <div className="flex items-center justify-between bg-white/40 border-b border-white/30 px-6 py-4">
                 <div className="flex items-center gap-3">
                   <span className="font-bold text-sm text-[#111827] capitalize">
                     {selectedToolset.source_id || selectedToolset.toolset_id.split(" ")[0]}
@@ -672,14 +672,14 @@ export function ToolsetManager({
                   {filteredTools.length > 0 && filteredTools.every(t => tempSelectedToolIds.has(t.id)) ? (
                     <button
                       onClick={() => handleDisableAllFiltered(filteredTools)}
-                      className="bg-white border border-[#D0CECA] hover:bg-red-50 hover:border-red-200 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition text-red-600"
+                      className="bg-white/50 backdrop-blur-sm border border-white/30 hover:bg-red-100/50 hover:border-red-300/40 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition text-red-600"
                     >
                       <X className="size-3.5" /> Disable All
                     </button>
                   ) : (
                     <button
                       onClick={() => handleEnableAllFiltered(filteredTools)}
-                      className="bg-white border border-[#D0CECA] hover:bg-[#EAE8E3] text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition text-[#111827]"
+                      className="bg-white/50 backdrop-blur-sm border border-white/30 hover:bg-white/80 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition text-[#111827]"
                     >
                       <Check className="size-3.5 text-emerald-600" /> Enable All
                     </button>
@@ -688,14 +688,14 @@ export function ToolsetManager({
               </div>
 
               {/* Rows */}
-              <div className="divide-y divide-[#D0CECA]">
+              <div className="divide-y divide-white/20">
                 {filteredTools.map((tool) => {
                   const isChecked = tempSelectedToolIds.has(tool.id)
                   return (
                     <div
                       key={tool.id}
                       onClick={() => toggleTempTool(tool.id)}
-                      className="flex items-start gap-4 px-6 py-4 hover:bg-[#FAFAFA] cursor-pointer transition"
+                      className="flex items-start gap-4 px-6 py-4 hover:bg-white/40 cursor-pointer transition"
                     >
                       <div className="mt-1 shrink-0">
                         {isChecked ? (
@@ -731,11 +731,11 @@ export function ToolsetManager({
             </div>
 
             {/* Sticky Bottom Actions Bar */}
-            <div className="sticky bottom-4 z-20 bg-[#E3E1DC] border border-[#D0CECA] rounded-xl p-4 flex justify-end gap-3 shadow-lg">
+            <div className="sticky bottom-4 z-20 glass-panel rounded-xl p-4 flex justify-end gap-3 shadow-lg border border-white/30">
               <Button
                 onClick={() => setView("detail")}
                 variant="outline"
-                className="bg-white border-[#D0CECA] text-xs font-semibold px-4 h-10 text-[#111827]"
+                className="bg-white/60 backdrop-blur-sm border-white/30 text-xs font-semibold px-4 h-10 text-[#111827]"
               >
                 Cancel
               </Button>
@@ -752,8 +752,8 @@ export function ToolsetManager({
 
       {/* Creation Modal / Dialog */}
       {isCreateOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-xl border border-[#D0CECA] max-w-md w-full p-6 space-y-4 shadow-xl m-4">
+        <div className="fixed inset-0 bg-black/25 backdrop-blur-xs flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white/80 backdrop-blur-lg rounded-xl border border-white/30 max-w-md w-full p-6 space-y-4 shadow-2xl m-4">
             <div className="flex justify-between items-start">
               <h3 className="text-lg font-bold text-[#111827]">Create New Toolset</h3>
               <button
@@ -771,7 +771,7 @@ export function ToolsetManager({
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Stripe Charges"
-                  className="bg-white border-[#D0CECA] focus-visible:ring-1 focus-visible:ring-[#111827]"
+                  className="workspace-input bg-white/60 backdrop-blur-sm border-white/30 focus-visible:ring-1 focus-visible:ring-[#4B8BDB]"
                 />
               </label>
 
@@ -781,7 +781,7 @@ export function ToolsetManager({
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                   rows={2}
-                  className="w-full resize-none rounded-lg border border-[#D0CECA] bg-white px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#111827]"
+                  className="w-full resize-none rounded-lg border border-white/30 bg-white/60 backdrop-blur-sm px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#4B8BDB]"
                 />
               </label>
 
@@ -796,7 +796,7 @@ export function ToolsetManager({
                     <select
                       value={newSource}
                       onChange={(e) => setNewSource(e.target.value)}
-                      className="w-full appearance-none rounded-lg border border-[#D0CECA] bg-white px-3 py-2.5 text-sm text-[#111827] outline-none font-medium pr-10 cursor-pointer"
+                      className="w-full appearance-none rounded-lg border border-white/30 bg-white/60 backdrop-blur-sm px-3 py-2.5 text-sm text-[#111827] outline-none font-medium pr-10 cursor-pointer focus:border-[#4B8BDB]"
                     >
                       {Object.keys(sources).map((src) => (
                         <option key={src} value={src}>
@@ -810,7 +810,7 @@ export function ToolsetManager({
               </label>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#D0CECA]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-white/30">
               <Button
                 onClick={() => setIsCreateOpen(false)}
                 variant="outline"

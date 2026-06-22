@@ -81,24 +81,24 @@ export function EnvironmentsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-[#EDEDEB]">
+    <div className="h-full overflow-y-auto glass-content">
       <div className="mx-auto max-w-5xl space-y-4 p-6">
-        <div className="flex flex-col gap-3 rounded-xl border border-[#D1CFCA] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-white/30 glass-card p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Globe className="size-5 text-[#111827]" />
             <div>
               <h2 className="text-sm font-bold text-[#111827]">Environments</h2>
               <p className="mt-0.5 text-xs text-[#6B7280]">
                 Variable sets per source. <span className="font-semibold">Activating</span> one overrides the proxy's
-                <code className="mx-1 rounded bg-[#EAE8E3] px-1">BASE_URL</code> and injects auth
-                (<code className="rounded bg-[#EAE8E3] px-1">AUTH_TOKEN</code>/<code className="rounded bg-[#EAE8E3] px-1">API_KEY</code>).
+                <code className="mx-1 rounded bg-white/40 px-1 border border-white/20">BASE_URL</code> and injects auth
+                (<code className="rounded bg-white/40 px-1 border border-white/20">AUTH_TOKEN</code>/<code className="rounded bg-white/40 px-1 border border-white/20">API_KEY</code>).
               </p>
             </div>
           </div>
           <label className="flex items-center gap-2 text-xs">
             <span className="text-[#9CA3AF]">Source</span>
             <select value={sourceId} onChange={(e) => setSourceId(e.target.value)}
-              className="rounded-lg border border-[#D1CFCA] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#111827]">
+              className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]">
               {Object.keys(sources).length === 0 && <option value="">No sources</option>}
               {Object.keys(sources).map((id) => <option key={id} value={id}>{id}</option>)}
             </select>
@@ -106,13 +106,13 @@ export function EnvironmentsPage() {
         </div>
 
         {sourceId && (
-          <div className="rounded-xl border border-[#D1CFCA] bg-white p-4">
+          <div className="rounded-xl border border-white/30 glass-card p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-xs text-[#6B7280]">
-                Downstream default base URL: <code className="rounded bg-[#EAE8E3] px-1 font-mono">{downstream || "—"}</code>
+              <div className="text-xs text-[#374151]">
+                Downstream default base URL: <code className="rounded bg-white/40 border border-white/20 px-1 font-mono">{downstream || "—"}</code>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${data.active ? "bg-emerald-50 text-emerald-700" : "bg-[#EAE8E3] text-[#787670]"}`}>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold ${data.active ? "bg-emerald-50 text-emerald-700" : "bg-white/40 border border-white/20 text-[#374151]"}`}>
                   {data.active ? <Power className="size-3" /> : <PowerOff className="size-3" />}
                   {data.active ? `Active: ${data.active}` : "No active env (default behavior)"}
                 </span>
@@ -122,7 +122,7 @@ export function EnvironmentsPage() {
               </div>
             </div>
             {testResult && (
-              <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-[#D0CECA] bg-[#1E1E1E] p-3 font-mono text-[11px] text-emerald-300">
+              <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-white/20 bg-black/60 backdrop-blur-md p-3 font-mono text-[11px] text-emerald-300">
                 {JSON.stringify(testResult, null, 2)}
               </pre>
             )}
@@ -139,12 +139,12 @@ export function EnvironmentsPage() {
         </div>
 
         {(creating || editId) && (
-          <div className="space-y-3 rounded-xl border border-[#D1CFCA] bg-white p-4">
+          <div className="space-y-3 rounded-xl border border-white/30 glass-panel p-4">
             <Input placeholder="Environment name (e.g. staging, prod)" value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="bg-white/50 backdrop-blur-sm border-white/30" />
             <textarea rows={4} placeholder={"KEY=VALUE per line\nBASE_URL=https://api.example.com\nAUTH_TOKEN=sk-..."}
               value={form.varsText} onChange={(e) => setForm((f) => ({ ...f, varsText: e.target.value }))}
-              className="w-full rounded-lg border border-[#D0CECA] bg-[#FAFAFA] px-3 py-2 font-mono text-xs outline-none focus:border-[#111827]" />
+              className="w-full rounded-lg border border-white/30 bg-white/30 backdrop-blur-sm px-3 py-2 font-mono text-xs outline-none focus:border-[#4B8BDB] placeholder:text-[#6B7280]" />
             <div className="flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => { setCreating(false); setEditId(null); setForm({ name: "", varsText: "" }) }}>Cancel</Button>
               <Button size="sm" className="bg-[#111827] text-white hover:bg-black" disabled={!form.name.trim()} onClick={save}>Save</Button>
@@ -154,13 +154,13 @@ export function EnvironmentsPage() {
 
         <div className="space-y-3">
           {data.environments.length === 0 && !creating ? (
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#D0CECA] py-10 text-center text-xs text-[#787670]">
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-white/50 bg-white/20 backdrop-blur-xs py-10 text-center text-xs text-[#374151]">
               <Globe className="size-5" /> No environments for this source yet.
             </div>
           ) : data.environments.map((env) => {
             const isActive = data.active === env.id
             return (
-              <div key={env.id} className={`rounded-xl border bg-white p-4 ${isActive ? "border-emerald-400 ring-1 ring-emerald-200" : "border-[#D1CFCA]"}`}>
+              <div key={env.id} className={`rounded-xl border glass-card p-4 ${isActive ? "border-emerald-400 ring-1 ring-emerald-200" : "border-white/30"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -180,12 +180,12 @@ export function EnvironmentsPage() {
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <button onClick={() => isActive ? activate(null) : activate(env.id)}
-                      className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition ${isActive ? "bg-[#EAE8E3] text-[#787670] hover:bg-[#ddd]" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>
+                      className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition ${isActive ? "bg-white/40 border border-white/20 text-[#374151] hover:bg-white/60" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>
                       {isActive ? "Deactivate" : "Activate"}
                     </button>
                     <button onClick={() => { setEditId(env.id); setCreating(false); setForm({ name: env.name, varsText: varsToText(env.variables) }) }}
-                      className="rounded-lg p-1.5 text-[#787670] transition hover:bg-[#EAE8E3] hover:text-[#111827]"><Pencil className="size-4" /></button>
-                    <button onClick={() => remove(env.id)} className="rounded-lg p-1.5 text-[#787670] transition hover:bg-red-50 hover:text-red-600"><Trash2 className="size-4" /></button>
+                      className="rounded-lg p-1.5 text-[#374151] transition hover:bg-white/40 hover:text-[#111827]"><Pencil className="size-4" /></button>
+                    <button onClick={() => remove(env.id)} className="rounded-lg p-1.5 text-[#374151] transition hover:bg-red-500/20 hover:text-red-600"><Trash2 className="size-4" /></button>
                   </div>
                 </div>
               </div>

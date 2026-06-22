@@ -30,9 +30,9 @@ export function ResourcePage({ tab }) {
   const selectedTools = (active?.tools ?? []).filter((t) => t.selected)
 
   return (
-    <div className="h-full overflow-y-auto bg-[#FAFAFA]">
+    <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-5xl space-y-4 p-6">
-        <div className="flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-white/30 glass-card p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-bold text-[#111827]">{tab}</h2>
             <p className="mt-0.5 text-xs text-[#6B7280]">{BLURB[tab]}</p>
@@ -42,7 +42,7 @@ export function ResourcePage({ tab }) {
             <select
               value={toolsetId}
               onChange={(e) => setToolsetId(e.target.value)}
-              className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#111827]"
+              className="rounded-lg border border-white/30 bg-white/50 backdrop-blur-sm px-3 py-2 text-xs text-[#111827] outline-none focus:border-[#4B8BDB]"
             >
               {toolsets.length === 0 && <option value="">No toolsets yet</option>}
               {toolsets.map((t) => (
@@ -55,7 +55,7 @@ export function ResourcePage({ tab }) {
         {toolsetId ? (
           <ToolsetExtras toolsetId={toolsetId} activeTab={tab} tools={selectedTools} />
         ) : (
-          <div className="rounded-xl border border-dashed border-[#E5E7EB] py-12 text-center text-sm text-[#9CA3AF]">
+          <div className="rounded-xl border border-dashed border-white/30 py-12 text-center text-sm text-[#9CA3AF]">
             Create a toolset first on the <span className="font-semibold">Toolsets</span> page.
           </div>
         )}
